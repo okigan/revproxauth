@@ -41,13 +41,14 @@ You have multiple self-hosted applications (Docker containers, internal services
 ## 🏗️ Architecture
 
 ```mermaid
-graph LR
+graph TB
     Client[👤 Client<br/>Browser/App]
     DNS[🌐 DNS<br/>*.mysynology.com → Your IP]
+    LetsEncrypt[🔐 Let's Encrypt<br/>Certificate Authority]
     
-    subgraph Lan
+    subgraph Lan[LAN Network]
         subgraph Synology["🖥️ Synology NAS"]
-            ReverseProxy[🌐 Synology <br >Reverse Proxy<br/>HTTPS Termination<br/>Port 443]
+            ReverseProxy[🌐 Synology Reverse Proxy<br/>HTTPS Termination - Port 443<br/>📜 SSL Certificate: *.mysynology.me]
             RADIUS[🔑 RADIUS Server<br/>Port 1812<br/>User Database]
             
             subgraph Docker["🐳 Docker"]
@@ -59,19 +60,30 @@ graph LR
         App2[🌐 Web Service<br/>192.168.1.50:3000]
         App3[⚙️ Internal Service<br/>192.168.1.100:5000]
     end
-    Client ==>|HTTPS Request<br/>app.mysynology.com| DNS
-    DNS ==>|Routes to NAS IP| ReverseProxy
-    SynAuth -.->|Validate Credentials| RADIUS
-    ReverseProxy ==>|HTTP<br/>localhost:9000| SynAuth
-    SynAuth ==>|Proxied Request<br/>localhost| App1
-    SynAuth ==>|Proxied Request<br/>LAN| App2
-    SynAuth ==>|Proxied Request<br/>LAN| App3
     
-    linkStyle default stroke:#2c3e50,stroke-width:3px
+    Client -->|1. HTTPS Request<br/>app.mysynology.com| DNS
+    DNS -->|2. Route to NAS IP| ReverseProxy
+    ReverseProxy <-.->|Certificate Setup<br/>ACME Protocol| LetsEncrypt
+    ReverseProxy -->|3. HTTP<br/>localhost:9000| SynAuth
+    SynAuth -.->|4. Validate<br/>Credentials| RADIUS
+    SynAuth -->|5. Proxy Request| App1
+    SynAuth -->|5. Proxy Request| App2
+    SynAuth -->|5. Proxy Request| App3
+    
+    linkStyle 0 stroke:#1976D2,stroke-width:4px
+    linkStyle 1 stroke:#F57C00,stroke-width:4px
+    linkStyle 2 stroke:#1565C0,stroke-width:3px,stroke-dasharray:5
+    linkStyle 3 stroke:#2E7D32,stroke-width:4px
+    linkStyle 4 stroke:#E65100,stroke-width:3px,stroke-dasharray:5
+    linkStyle 5 stroke:#1565C0,stroke-width:4px
+    linkStyle 6 stroke:#D84315,stroke-width:4px
+    linkStyle 7 stroke:#D84315,stroke-width:4px
     
     style Client fill:#64B5F6,stroke:#1976D2,stroke-width:2px,color:#000
     style DNS fill:#FFD54F,stroke:#F57C00,stroke-width:2px,color:#000
+    style LetsEncrypt fill:#90CAF9,stroke:#1565C0,stroke-width:2px,color:#000
     style Synology fill:#E1BEE7,stroke:#7B1FA2,stroke-width:3px,color:#000
+    style Lan fill:#f5f5f5,stroke:#999,stroke-width:2px,color:#000
     style Docker fill:#A5D6A7,stroke:#388E3C,stroke-width:2px,color:#000
     style ReverseProxy fill:#FFF59D,stroke:#F57C00,stroke-width:2px,color:#000
     style SynAuth fill:#81C784,stroke:#2E7D32,stroke-width:2px,color:#000
@@ -85,7 +97,7 @@ graph LR
 
 1. **Client** makes HTTPS request to `app.mysynology.com`
 2. **DNS** resolves to your Synology NAS public IP
-3. **Synology Reverse Proxy** (running on NAS) terminates SSL and forwards to SynAuthProxy container
+3. **Synology Reverse Proxy** (running on NAS) terminates SSL using a certificate that includes `*.mysynology.me` as a Subject Alternative Name (SAN) and forwards to SynAuthProxy container
 4. **SynAuthProxy** (Docker container on NAS) checks authentication:
    - If not logged in → Show login page
    - Validate credentials via **RADIUS server** (running on NAS)
@@ -103,7 +115,10 @@ graph LR
 - Synology NAS with DSM 7.0+
 - Container Manager (Docker) installed via Package Center
 - RADIUS Server package installed on Synology
-- Domain name with DNS configured
+- Domain name with DNS configured (e.g., `*.mysynology.me`)
+- SSL certificate installed on Synology that includes your subdomains as Subject Alternative Names (SAN)
+  - Example: Certificate for `*.mysynology.me` or with SANs for `app.mysynology.me`, `api.mysynology.me`, etc.
+  - Can use Let's Encrypt via DSM's built-in certificate manager
 
 ### 📖 Interactive Setup Guide
 
