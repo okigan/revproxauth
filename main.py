@@ -140,9 +140,12 @@ def is_admin_user(username: str) -> bool:
 
 def get_login_url(request: Request, next_path: str):
     domain = LOGIN_DOMAIN if LOGIN_DOMAIN else request.headers.get("host", "localhost")
-    # Use http for local testing (change to https in production)
-    # Don't include /synauthproxy/ prefix - root_path handles it automatically
-    return f"http://{domain}/login?next={next_path}"
+    # Check if domain already includes protocol
+    if domain and (domain.startswith("http://") or domain.startswith("https://")):
+        return f"{domain}/login?next={next_path}"
+    else:
+        # Use http for local testing (change to https in production)
+        return f"http://{domain}/login?next={next_path}"
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request, next: str = "/"):
