@@ -48,14 +48,35 @@ Please configure these variables in your container environment:
   • RADIUS_SERVER  - IP address of your RADIUS server (e.g., 192.168.1.10)
   • RADIUS_SECRET  - RADIUS shared secret
 
-📖 For detailed setup instructions, see:
-   https://github.com/okigan/synauthproxy/blob/main/SYNOLOGY_SETUP.md
+📖 For setup instructions, see:
+   https://github.com/okigan/synauthproxy#readme
 
 Container cannot start without these variables.
 """
     print(error_msg, file=sys.stderr)
     logging.error(error_msg)
     sys.exit(1)
+
+# Print startup information
+git_commit = "unknown"
+try:
+    with open("/app/git_commit.txt", "r") as f:
+        git_commit = f.read().strip()
+except Exception:
+    pass
+
+startup_msg = f"""
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ 🔐 SynAuthProxy Starting                                                     ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+📍 Git Commit:    {git_commit}
+🌐 RADIUS Server: {RADIUS_SERVER}:{RADIUS_PORT}
+🔑 NAS ID:        {RADIUS_NAS_IDENTIFIER}
+🌍 Login Domain:  {LOGIN_DOMAIN if LOGIN_DOMAIN else '(not set)'}
+👥 Admin Users:   {', '.join(ADMIN_USERS) if ADMIN_USERS else '(all authenticated users)'}
+"""
+print(startup_msg)
+logging.info(startup_msg)
 
 # Initialize RADIUS client and dictionary
 radius_dict = Dictionary("/app/dictionary")

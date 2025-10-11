@@ -172,8 +172,6 @@ Configure RADIUS:
      RADIUS_NAS_IDENTIFIER=synauthproxy   # Default: synauthproxy
      SYNAUTHPROXY_ADMIN_USERS=admin,user1 # Comma-separated admin users (empty = all users can edit)
      ```
-   
-   📖 **Need help?** See [SYNOLOGY_SETUP.md](SYNOLOGY_SETUP.md) for detailed configuration guide
 
 6. **Apply and Start**
    - Click **Apply** → **Done**
