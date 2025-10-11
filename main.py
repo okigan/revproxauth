@@ -1,24 +1,22 @@
-import os
-import logging
-import httpx
 import json
+import logging
+import os
 import sys
+from typing import Any
 
-from typing import Any, Dict
-
-from fastapi import FastAPI, Request, Form, HTTPException, status
+import httpx
+from fastapi import FastAPI, Form, HTTPException, Request, status
 from fastapi.responses import (
+    FileResponse,
     HTMLResponse,
     RedirectResponse,
     StreamingResponse,
-    FileResponse,
 )
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from pyrad.client import Client
 from pyrad.dictionary import Dictionary
-
 
 app = FastAPI(
     # root_path="/synauthproxy"
@@ -87,7 +85,7 @@ Container cannot start without these variables.
 # Print startup information
 git_commit = "unknown"
 try:
-    with open("/app/git_commit.txt", "r") as f:
+    with open("/app/git_commit.txt") as f:
         git_commit = f.read().strip()
 except Exception:
     pass
@@ -116,9 +114,10 @@ client = Client(
 
 # Load config from /app/config/synauthproxy.json
 
-def load_config() -> Dict[str, Any]:
+
+def load_config() -> dict[str, Any]:
     try:
-        with open("/app/config/synauthproxy.json", "r") as f:
+        with open("/app/config/synauthproxy.json") as f:
             config = json.load(f)
             # Validate version
             if config.get("version") != "1.0":
@@ -141,9 +140,7 @@ def save_mappings(mappings):
             json.dump(config, f, indent=2)
     except Exception as e:
         logging.error(f"Error saving mappings: {str(e)}")
-        raise HTTPException(
-            status_code=500, detail=f"Failed to save mappings: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to save mappings: {str(e)}") from None
 
 
 class AuthRequestModel(BaseModel):
@@ -239,12 +236,8 @@ async def login(
             )
 
     except Exception as e:
-        logging.error(
-            f"Login error for user '{username}': {type(e).__name__}: {str(e)}"
-        )
-        logging.error(
-            f"RADIUS connection details - Server: {RADIUS_SERVER}, Port: {RADIUS_PORT}"
-        )
+        logging.error(f"Login error for user '{username}': {type(e).__name__}: {str(e)}")
+        logging.error(f"RADIUS connection details - Server: {RADIUS_SERVER}, Port: {RADIUS_PORT}")
         logging.exception("Full traceback:")
         return templates.TemplateResponse(
             "login.html",
@@ -322,7 +315,11 @@ async def add_mapping(
     mappings = load_mappings()
     # Parse flags from comma-separated string
     flags_list = [f.strip() for f in flags.split(",") if f.strip()]
-    new_mapping: Dict[str, Any] = {"match_url": match_url, "http_dest": http_dest, "flags": flags_list}
+    new_mapping: dict[str, Any] = {
+        "match_url": match_url,
+        "http_dest": http_dest,
+        "flags": flags_list,
+    }
     mappings.append(new_mapping)
     save_mappings(mappings)
     return RedirectResponse(url="/synauthproxy", status_code=status.HTTP_303_SEE_OTHER)
@@ -466,18 +463,17 @@ async def proxy_request(request: Request, dest_url: str, path: str):
             media_type=resp.headers.get("content-type"),
         )
     except Exception as e:
-        logging.error(
-            f"Proxy error for {request.method} {full_url}: {type(e).__name__}: {str(e)}"
-        )
+        logging.error(f"Proxy error for {request.method} {full_url}: {type(e).__name__}: {str(e)}")
         logging.exception("Full proxy error traceback:")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 # WebSocket upgrade handler using httpx for upgrade
 async def handle_websocket_upgrade(request: Request, dest_url: str, path: str):
     import asyncio
+
     from starlette.responses import Response
-    from starlette.types import Receive, Send, Scope
+    from starlette.types import Receive, Scope, Send
 
     # Build WebSocket URL from HTTP URL
     full_url = dest_url.rstrip("/") + "/" + path.lstrip("/")
@@ -545,9 +541,7 @@ async def handle_websocket_upgrade(request: Request, dest_url: str, path: str):
                 )
 
         except Exception as e:
-            logging.error(
-                f"WebSocket upgrade error for {ws_url}: {type(e).__name__}: {str(e)}"
-            )
+            logging.error(f"WebSocket upgrade error for {ws_url}: {type(e).__name__}: {str(e)}")
             logging.exception("Full WebSocket error traceback:")
             await send({"type": "websocket.close", "code": 1011, "reason": str(e)})
 
@@ -572,9 +566,7 @@ async def handle_request(request: Request, full_path: str = ""):
     # Strip port number from host header for matching
     host_without_port = host_header.split(":")[0] if ":" in host_header else host_header
     request_path = f"/{full_path}".rstrip("/") if full_path else "/"
-    logging.debug(
-        f"Handling request: {request.method} {host_without_port}{request_path}"
-    )
+    logging.debug(f"Handling request: {request.method} {host_without_port}{request_path}")
 
     # Check mappings (reload on each request to pick up changes)
     for mapping in load_mappings():
@@ -611,9 +603,7 @@ async def handle_request(request: Request, full_path: str = ""):
                 # Use full_path (without root_path prefix) for the next parameter
                 next_url = f"/{full_path}" if full_path else "/"
                 login_url = get_login_url(request, next_url)
-                return RedirectResponse(
-                    url=login_url, status_code=status.HTTP_302_FOUND
-                )
+                return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
 
             # Determine target path
             target_path = f"/{full_path}" if full_path else "/"

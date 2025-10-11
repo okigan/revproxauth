@@ -5,6 +5,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com/)
+[![Lint](https://github.com/okigan/synauthproxy/actions/workflows/lint.yml/badge.svg)](https://github.com/okigan/synauthproxy/actions/workflows/lint.yml)
 [![Sponsor](https://img.shields.io/badge/Sponsor-❤-ff69b4.svg)](https://github.com/sponsors/okigan)
 
 ---
@@ -365,15 +366,76 @@ Forward:   http://backend/users
 
 ## 🏗️ Development
 
-```bash
-# Install dependencies
-pip install -e .
+### Setup Development Environment
 
-# Run locally
+```bash
+# Clone the repository
+git clone https://github.com/okigan/synauthproxy.git
+cd synauthproxy
+
+# Install dependencies (using uv)
+uv sync
+
+# Install pre-commit hooks for automatic linting
+make install-hooks
+```
+
+### Code Quality
+
+This project uses [Ruff](https://docs.astral.sh/ruff/) for linting and formatting.
+
+**Available commands:**
+
+```bash
+# Run linter and formatter (auto-fix issues)
+make lint
+
+# Check linting without making changes
+make lint-check
+
+# Format code only
+make format
+```
+
+**Pre-commit Hook:**
+
+The git pre-commit hook automatically runs ruff linter and formatter before each commit. Install it with:
+
+```bash
+make install-hooks
+```
+
+This ensures code quality and consistency across all commits.
+
+**CI/CD:**
+
+GitHub Actions automatically runs linting on:
+- All pushes to `main` branch
+- All pull requests
+- Manual workflow dispatch
+
+The Docker build workflow will only proceed if linting passes.
+
+### Running Locally
+
+```bash
+# Run with uvicorn
 uvicorn main:app --reload --port 9000
 
-# Run in Docker
+# Or run in Docker
 docker-compose up --build
+```
+
+### Project Structure
+
+```
+synauthproxy/
+├── main.py              # Main FastAPI application
+├── config/              # Configuration files
+├── templates/           # Jinja2 HTML templates
+├── static/              # CSS/JS assets
+├── pyrad-stubs/         # Type stubs for pyrad library
+└── tools/               # Build and development tools
 ```
 
 ---

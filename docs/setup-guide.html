@@ -98,31 +98,75 @@
             margin-bottom: 20px;
         }
 
+        .slide-description ol {
+            margin-top: 15px;
+            padding-left: 25px;
+        }
+
+        .slide-description ol li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        .slide-description code {
+            background: #f5f7fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            color: #e83e8c;
+        }
+
+        .slide-description strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .slide-image-container {
+            width: 100%;
+            margin-top: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            background: #f5f7fa;
+            position: relative;
+            min-height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         .slide-image {
             width: 100%;
+            display: block;
             border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            margin-top: 20px;
         }
 
-        .code-block {
-            background: #f5f7fa;
-            border: 1px solid #e1e8ed;
-            border-radius: 8px;
-            padding: 15px;
-            font-family: 'Monaco', 'Courier New', monospace;
-            font-size: 13px;
-            margin: 15px 0;
-            overflow-x: auto;
+        .image-placeholder {
+            width: 100%;
+            min-height: 400px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 18px;
+            font-weight: 500;
+            border: 2px dashed #ddd;
+            border-radius: 12px;
+            transition: all 0.3s;
         }
 
-        .code-block .var-name {
-            color: #667eea;
-            font-weight: bold;
+        .image-placeholder-icon {
+            font-size: 64px;
+            margin-bottom: 15px;
+            opacity: 0.5;
         }
 
-        .code-block .var-value {
-            color: #27ae60;
+        .image-placeholder-text {
+            font-size: 16px;
+            color: #666;
         }
 
         .navigation {
@@ -240,170 +284,206 @@
 
             <div class="carousel">
                 <div class="carousel-track" id="carouselTrack">
-                    
-                    <!-- Step 1 -->
                     <div class="carousel-slide">
                         <div class="step-number">1</div>
                         <h2 class="slide-title">Install RADIUS Server</h2>
-                        <div class="slide-description">
-                            <p>First, install the RADIUS Server package from Synology Package Center. This provides authentication services for SynAuthProxy.</p>
-                            <ol style="margin: 15px 0 15px 20px; line-height: 1.8;">
-                                <li>Open <strong>Package Center</strong> on your Synology NAS</li>
-                                <li>Search for "RADIUS Server"</li>
-                                <li>Click <strong>Install</strong></li>
-                                <li>After installation, open RADIUS Server and enable it on port 1812</li>
-                                <li>Set a shared secret (remember this for later!)</li>
-                                <li>Add client: <code>127.0.0.1</code> or <code>172.17.0.1</code> with the same secret</li>
-                            </ol>
+                        <div class="slide-description"><p>First, install the RADIUS Server package from Synology Package Center. This provides authentication services for SynAuthProxy.</p>
+
+
+
+
+<ol>
+<li>Open <strong>Package Center</strong> on your Synology NAS</li>
+<li>Search for "RADIUS Server"</li>
+<li>Click <strong>Install</strong></li>
+<li>After installation, open RADIUS Server and enable it on port 1812</li>
+<li>Set a shared secret (remember this for later!)</li>
+<li>Add client: <code>127.0.0.1</code> or <code>172.17.0.1</code> with the same secret</li>
+</ol></div>
+                        <div class="slide-image-container">
+                            <img src="images/image.png" alt="RADIUS Server Installation" class="slide-image" />
                         </div>
                     </div>
-
-                    <!-- Step 2 -->
                     <div class="carousel-slide">
                         <div class="step-number">2</div>
                         <h2 class="slide-title">Open Container Manager</h2>
-                        <div class="slide-description">
-                            <p>Navigate to Container Manager (Docker) on your Synology NAS. If you don't have it installed, get it from Package Center first.</p>
-                            <ol style="margin: 15px 0 15px 20px; line-height: 1.8;">
-                                <li>Open <strong>Container Manager</strong> from the main menu</li>
-                                <li>Go to the <strong>Registry</strong> tab</li>
-                            </ol>
+                        <div class="slide-description"><p>Navigate to Container Manager (Docker) on your Synology NAS. If you don't have it installed, get it from Package Center first.</p>
+
+
+<ol>
+<li>Open <strong>Container Manager</strong> from the main menu</li>
+<li>Go to the <strong>Registry</strong> tab</li>
+</ol></div>
+                        <div class="slide-image-container">
+                            <div class="image-placeholder">
+                                <div class="image-placeholder-icon">🖼️</div>
+                                <div class="image-placeholder-text">Screenshot: Open Container Manager</div>
+                            </div>
                         </div>
                     </div>
-
-                    <!-- Step 3 -->
                     <div class="carousel-slide">
                         <div class="step-number">3</div>
                         <h2 class="slide-title">Download SynAuthProxy Image</h2>
-                        <div class="slide-description">
-                            <p>Pull the official SynAuthProxy image from Docker Hub.</p>
-                            <ol style="margin: 15px 0 15px 20px; line-height: 1.8;">
-                                <li>In the <strong>Registry</strong> tab, search for: <code>okigan/synauthproxy</code></li>
-                                <li>Click on the result and select <strong>Download</strong></li>
-                                <li>Choose the <strong>latest</strong> tag</li>
-                                <li>Wait for the download to complete (check the <strong>Image</strong> tab)</li>
-                            </ol>
+                        <div class="slide-description"><p>Pull the official SynAuthProxy image from Docker Hub.</p>
+
+
+<ol>
+<li>In the <strong>Registry</strong> tab, search for: <code>okigan/synauthproxy</code></li>
+<li>Click on the result and select <strong>Download</strong></li>
+<li>Choose the <strong>latest</strong> tag</li>
+<li>Wait for the download to complete (check the <strong>Image</strong> tab)</li>
+</ol></div>
+                        <div class="slide-image-container">
+                            <div class="image-placeholder">
+                                <div class="image-placeholder-icon">🖼️</div>
+                                <div class="image-placeholder-text">Screenshot: Download SynAuthProxy Image</div>
+                            </div>
                         </div>
                     </div>
-
-                    <!-- Step 4 -->
                     <div class="carousel-slide">
                         <div class="step-number">4</div>
                         <h2 class="slide-title">Launch Container</h2>
-                        <div class="slide-description">
-                            <p>Create a new container from the downloaded image.</p>
-                            <ol style="margin: 15px 0 15px 20px; line-height: 1.8;">
-                                <li>Go to the <strong>Container</strong> tab</li>
-                                <li>Click the downloaded <code>okigan/synauthproxy</code> image</li>
-                                <li>Click <strong>Launch</strong></li>
-                                <li>Set Container Name to: <code>synauthproxy</code></li>
-                                <li>Click <strong>Advanced Settings</strong></li>
-                            </ol>
+                        <div class="slide-description"><p>Create a new container from the downloaded image.</p>
+
+
+<ol>
+<li>Go to the <strong>Container</strong> tab</li>
+<li>Click the downloaded <code>okigan/synauthproxy</code> image</li>
+<li>Click <strong>Launch</strong></li>
+<li>Set Container Name to: <code>synauthproxy</code></li>
+<li>Click <strong>Advanced Settings</strong></li>
+</ol></div>
+                        <div class="slide-image-container">
+                            <div class="image-placeholder">
+                                <div class="image-placeholder-icon">🖼️</div>
+                                <div class="image-placeholder-text">Screenshot: Launch Container</div>
+                            </div>
                         </div>
                     </div>
-
-                    <!-- Step 5 -->
                     <div class="carousel-slide">
                         <div class="step-number">5</div>
                         <h2 class="slide-title">Configure Port Mapping</h2>
-                        <div class="slide-description">
-                            <p>Map the container port to your host so you can access the web interface.</p>
-                            <ol style="margin: 15px 0 15px 20px; line-height: 1.8;">
-                                <li>In Advanced Settings, go to <strong>Port Settings</strong> tab</li>
-                                <li>Click <strong>+ Add</strong></li>
-                                <li>Local Port: <code>9000</code></li>
-                                <li>Container Port: <code>9000</code></li>
-                                <li>Type: <code>TCP</code></li>
-                            </ol>
+                        <div class="slide-description"><p>Map the container port to your host so you can access the web interface.</p>
+
+
+<ol>
+<li>In Advanced Settings, go to <strong>Port Settings</strong> tab</li>
+<li>Click <strong>+ Add</strong></li>
+<li>Local Port: <code>9000</code></li>
+<li>Container Port: <code>9000</code></li>
+<li>Type: <code>TCP</code></li>
+</ol></div>
+                        <div class="slide-image-container">
+                            <div class="image-placeholder">
+                                <div class="image-placeholder-icon">🖼️</div>
+                                <div class="image-placeholder-text">Screenshot: Configure Port Mapping</div>
+                            </div>
                         </div>
                     </div>
-
-                    <!-- Step 6 -->
                     <div class="carousel-slide">
                         <div class="step-number">6</div>
                         <h2 class="slide-title">Configure Volume for Persistent Storage</h2>
-                        <div class="slide-description">
-                            <p>Mount a volume to persist your configuration across container restarts.</p>
-                            <ol style="margin: 15px 0 15px 20px; line-height: 1.8;">
-                                <li>Go to <strong>Volume Settings</strong> tab</li>
-                                <li>Click <strong>Add Folder</strong></li>
-                                <li>Create new folder: <code>/docker/synauthproxy/config</code></li>
-                                <li>Mount path: <code>/app/config</code></li>
-                            </ol>
+                        <div class="slide-description"><p>Mount a volume to persist your configuration across container restarts.</p>
+
+
+<ol>
+<li>Go to <strong>Volume Settings</strong> tab</li>
+<li>Click <strong>Add Folder</strong></li>
+<li>Create new folder: <code>/docker/synauthproxy/config</code></li>
+<li>Mount path: <code>/app/config</code></li>
+</ol></div>
+                        <div class="slide-image-container">
+                            <div class="image-placeholder">
+                                <div class="image-placeholder-icon">🖼️</div>
+                                <div class="image-placeholder-text">Screenshot: Configure Volume for Persistent Storage</div>
+                            </div>
                         </div>
                     </div>
-
-                    <!-- Step 7 -->
                     <div class="carousel-slide">
                         <div class="step-number">7</div>
                         <h2 class="slide-title">Set Environment Variables</h2>
-                        <div class="slide-description">
-                            <p>Configure the essential settings. The container will show these variables - you just need to fill in the values!</p>
-                            <div class="code-block">
-<span class="var-name">RADIUS_SERVER</span>=<span class="var-value">172.17.0.1</span>          <span style="color: #999">← Docker host IP</span>
-<span class="var-name">RADIUS_SECRET</span>=<span class="var-value">your-secret-here</span>   <span style="color: #999">← From RADIUS config</span>
-<span class="var-name">RADIUS_PORT</span>=<span class="var-value">1812</span>                  <span style="color: #999">← Default port</span>
-<span class="var-name">LOGIN_DOMAIN</span>=<span class="var-value">https://nas.example.com:9000</span>
-<span class="var-name">SYNAUTHPROXY_ADMIN_USERS</span>=<span class="var-value">admin</span>   <span style="color: #999">← Optional</span>
+                        <div class="slide-description"><p>Configure the essential settings. The container will show these variables - you just need to fill in the values!</p>
+
+
+<ul>
+<li>RADIUS_SERVER=172.17.0.1   # Docker host IP (use if RADIUS is on same NAS)</li>
+<li>RADIUS_SECRET=your-secret-here   # From RADIUS Server configuration</li>
+<li>RADIUS_PORT=1812   # Default RADIUS port</li>
+<li>LOGIN_DOMAIN=https://nas.example.com:9000   # Your full domain URL with protocol</li>
+<li>SYNAUTHPROXY_ADMIN_USERS=admin   # Optional: comma-separated admin usernames</li>
+</ul></div>
+                        <div class="slide-image-container">
+                            <div class="image-placeholder">
+                                <div class="image-placeholder-icon">🖼️</div>
+                                <div class="image-placeholder-text">Screenshot: Set Environment Variables</div>
                             </div>
-                            <p style="margin-top: 15px;">💡 <strong>Tip:</strong> Use <code>172.17.0.1</code> for RADIUS_SERVER if your RADIUS runs on the same Synology NAS.</p>
                         </div>
                     </div>
-
-                    <!-- Step 8 -->
                     <div class="carousel-slide">
                         <div class="step-number">8</div>
                         <h2 class="slide-title">Start Container</h2>
-                        <div class="slide-description">
-                            <p>Review your settings and launch the container!</p>
-                            <ol style="margin: 15px 0 15px 20px; line-height: 1.8;">
-                                <li>Click <strong>Apply</strong> then <strong>Done</strong></li>
-                                <li>The container will start automatically</li>
-                                <li>Check logs to verify it started successfully</li>
-                                <li>You should see: <code>SynAuthProxy Starting</code> with your configuration</li>
-                            </ol>
-                            <p style="margin-top: 15px;">🎉 Container is now running on <code>http://YOUR-NAS-IP:9000</code></p>
+                        <div class="slide-description"><p>Review your settings and launch the container!</p>
+
+
+<ol>
+<li>Click <strong>Apply</strong> then <strong>Done</strong></li>
+<li>The container will start automatically</li>
+<li>Check logs to verify it started successfully</li>
+<li>You should see: <code>SynAuthProxy Starting</code> with your configuration</li>
+</ol>
+
+
+<p>Container is now running on <code>http://YOUR-NAS-IP:9000</code></p></div>
+                        <div class="slide-image-container">
+                            <div class="image-placeholder">
+                                <div class="image-placeholder-icon">🖼️</div>
+                                <div class="image-placeholder-text">Screenshot: Start Container</div>
+                            </div>
                         </div>
                     </div>
-
-                    <!-- Step 9 -->
                     <div class="carousel-slide">
                         <div class="step-number">9</div>
                         <h2 class="slide-title">Configure Reverse Proxy</h2>
-                        <div class="slide-description">
-                            <p>Set up Synology's built-in reverse proxy to route traffic through SynAuthProxy.</p>
-                            <ol style="margin: 15px 0 15px 20px; line-height: 1.8;">
-                                <li>Open <strong>Control Panel</strong> → <strong>Login Portal</strong> → <strong>Advanced</strong></li>
-                                <li>Go to <strong>Reverse Proxy</strong> tab</li>
-                                <li>Click <strong>Create</strong></li>
-                                <li><strong>Source:</strong> <code>https://app.yourdomain.com:443</code></li>
-                                <li><strong>Destination:</strong> <code>http://localhost:9000</code></li>
-                                <li>✅ Enable <strong>WebSocket</strong></li>
-                            </ol>
-                        </div>
-                    </div>
+                        <div class="slide-description"><p>Set up Synology's built-in reverse proxy to route traffic through SynAuthProxy.</p>
 
-                    <!-- Step 10 -->
-                    <div class="carousel-slide">
-                        <div class="step-number">✓</div>
-                        <h2 class="slide-title">Setup Complete! 🎉</h2>
-                        <div class="slide-description">
-                            <p style="font-size: 18px; margin-bottom: 20px;">Your SynAuthProxy is now ready to use!</p>
-                            <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 15px; border-radius: 4px; margin: 20px 0;">
-                                <h3 style="color: #2e7d32; margin-bottom: 10px;">Next Steps:</h3>
-                                <ol style="margin: 10px 0 10px 20px; line-height: 1.8; color: #1b5e20;">
-                                    <li>Visit <code>https://yourdomain.com/synauthproxy</code></li>
-                                    <li>Log in with your Synology credentials</li>
-                                    <li>Add your first application mapping</li>
-                                    <li>Start using centralized authentication!</li>
-                                </ol>
+
+<ol>
+<li>Open <strong>Control Panel</strong> → <strong>Login Portal</strong> → <strong>Advanced</strong></li>
+<li>Go to <strong>Reverse Proxy</strong> tab</li>
+<li>Click <strong>Create</strong></li>
+<li><strong>Source:</strong> <code>https://app.yourdomain.com:443</code></li>
+<li><strong>Destination:</strong> <code>http://localhost:9000</code></li>
+<li>✅ Enable <strong>WebSocket</strong></li>
+</ol></div>
+                        <div class="slide-image-container">
+                            <div class="image-placeholder">
+                                <div class="image-placeholder-icon">🖼️</div>
+                                <div class="image-placeholder-text">Screenshot: Configure Reverse Proxy</div>
                             </div>
-                            <p style="margin-top: 20px; text-align: center;">
-                                <a href="https://github.com/okigan/synauthproxy" style="display: inline-block; background: #667eea; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 500;">View Full Documentation</a>
-                            </p>
                         </div>
                     </div>
+                    <div class="carousel-slide">
+                        <div class="step-number">10</div>
+                        <h2 class="slide-title">Setup Complete 🎉</h2>
+                        <div class="slide-description"><p>Your SynAuthProxy is now ready to use!</p>
 
+
+<p>Next Steps:</p>
+
+
+<ol>
+<li>Visit <code>https://yourdomain.com/synauthproxy</code></li>
+<li>Log in with your Synology credentials</li>
+<li>Add your first application mapping</li>
+<li>Start using centralized authentication!</li>
+</ol></div>
+                        <div class="slide-image-container">
+                            <div class="image-placeholder">
+                                <div class="image-placeholder-icon">🖼️</div>
+                                <div class="image-placeholder-text">Screenshot: Setup Complete 🎉</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -462,12 +542,12 @@
             }
         }
 
-        function moveSlide(direction) {
+        window.moveSlide = function(direction) {
             currentSlide += direction;
             if (currentSlide < 0) currentSlide = 0;
             if (currentSlide >= totalSlides) currentSlide = totalSlides - 1;
             updateCarousel();
-        }
+        };
 
         function goToSlide(index) {
             currentSlide = index;

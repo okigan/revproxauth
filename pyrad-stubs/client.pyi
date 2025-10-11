@@ -1,4 +1,4 @@
-from typing import Optional, Any
+from typing import Any
 
 class Client:
     def __init__(
@@ -6,9 +6,9 @@ class Client:
         server: str,
         secret: bytes,
         authport: int = 1812,
-        dict: Optional[Any] = None
+        dict: Any | None = None
     ) -> None: ...
-    
+
     def CreateAuthPacket(self, code: int, User_Name: bytes) -> Any: ...
-    
+
     def SendPacket(self, req: Any) -> Any: ...

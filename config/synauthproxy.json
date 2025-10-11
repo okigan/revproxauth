@@ -2,33 +2,33 @@
   "version": "1.0",
   "mappings": [
     {
-      "match_url": "app1.mysynologydomain.com",
+      "match_url": "grafana.mysynology.me",
+      "http_dest": "http://localhost:3000",
+      "flags": []
+    },
+    {
+      "match_url": "jenkins.mysynology.me",
       "http_dest": "http://localhost:8080",
       "flags": []
     },
     {
-      "match_url": "mysynologydomain.com/app2",
+      "match_url": "mynas.mysynology.me/api",
       "http_dest": "http://localhost:8081",
       "flags": ["strip_path"]
     },
     {
-      "match_url": "test.mysynologydomain.com/hee",
-      "http_dest": "http://he.net",
+      "match_url": "portainer.mysynology.me",
+      "http_dest": "http://localhost:9000",
       "flags": []
     },
     {
-      "match_url": "test.mysynologydomain.com/he",
-      "http_dest": "https://he.net",
+      "match_url": "chatgpt.mysynology.me",
+      "http_dest": "http://192.168.1.100:8080",
       "flags": []
     },
     {
-      "match_url": "test.mysynologydomain.com",
-      "http_dest": "https://www.google.com",
-      "flags": []
-    },
-    {
-      "match_url": "gpt.okulist.com",
-      "http_dest": "http://192.168.10.25:8080",
+      "match_url": "test.mysynology.me",
+      "http_dest": "https://www.example.com",
       "flags": []
     }
   ]
