@@ -2,6 +2,7 @@ import os
 import logging
 import httpx
 import json
+import sys
 
 from fastapi import FastAPI, Request, Form, HTTPException, status
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
@@ -24,6 +25,37 @@ RADIUS_PORT = int(os.getenv("RADIUS_PORT", "1812"))
 RADIUS_NAS_IDENTIFIER = os.getenv("RADIUS_NAS_IDENTIFIER", "synauthproxy")
 LOGIN_DOMAIN = os.getenv("LOGIN_DOMAIN")
 ADMIN_USERS = os.getenv("SYNAUTHPROXY_ADMIN_USERS", "").split(",") if os.getenv("SYNAUTHPROXY_ADMIN_USERS") else []
+
+# Validate required environment variables
+missing_vars = []
+if not RADIUS_SERVER:
+    missing_vars.append("RADIUS_SERVER")
+if not RADIUS_SECRET:
+    missing_vars.append("RADIUS_SECRET")
+
+if missing_vars:
+    error_msg = f"""
+╔══════════════════════════════════════════════════════════════════════════════╗
+║ ❌ CONFIGURATION ERROR: Missing Required Environment Variables               ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+The following required environment variables are not set:
+  {', '.join(missing_vars)}
+
+Please configure these variables in your container environment:
+
+📋 Required Variables:
+  • RADIUS_SERVER  - IP address of your RADIUS server (e.g., 192.168.1.10)
+  • RADIUS_SECRET  - RADIUS shared secret
+
+📖 For detailed setup instructions, see:
+   https://github.com/okigan/synauthproxy/blob/main/SYNOLOGY_SETUP.md
+
+Container cannot start without these variables.
+"""
+    print(error_msg, file=sys.stderr)
+    logging.error(error_msg)
+    sys.exit(1)
 
 # Initialize RADIUS client and dictionary
 radius_dict = Dictionary("/app/dictionary")

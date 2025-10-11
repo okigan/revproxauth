@@ -157,15 +157,23 @@ Configure RADIUS:
 
 5. **Configure Environment Variables**
    - **Environment** tab
-   - Add these variables:
+   - Click **+ Add** for each variable below:
+     
+     **Required Variables:**
      ```
      RADIUS_SERVER=192.168.10.12          # Your RADIUS server IP
-     RADIUS_SECRET=your-secret-here       # Your RADIUS shared secret
-     RADIUS_PORT=1812
-     RADIUS_NAS_IDENTIFIER=synauthproxy
+     RADIUS_SECRET=your-secret-here       # Your RADIUS shared secret  
      LOGIN_DOMAIN=yourdomain.com          # Your domain
-     SYNAUTHPROXY_ADMIN_USERS=admin,user1 # Optional: admin users
      ```
+     
+     **Optional Variables:**
+     ```
+     RADIUS_PORT=1812                     # Default: 1812
+     RADIUS_NAS_IDENTIFIER=synauthproxy   # Default: synauthproxy
+     SYNAUTHPROXY_ADMIN_USERS=admin,user1 # Comma-separated admin users (empty = all users can edit)
+     ```
+   
+   📖 **Need help?** See [SYNOLOGY_SETUP.md](SYNOLOGY_SETUP.md) for detailed configuration guide
 
 6. **Apply and Start**
    - Click **Apply** → **Done**
