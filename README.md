@@ -265,7 +265,7 @@ services:
       RADIUS_PORT: 1812
       RADIUS_NAS_IDENTIFIER: synauthproxy
       LOGIN_DOMAIN: yourdomain.com
-      # SYNAUTHPROXY_ADMIN_USERS: admin,igor  # Optional
+      # SYNAUTHPROXY_ADMIN_USERS: admin,user1  # Optional
     ports:
       - "9000:9000"
     volumes:

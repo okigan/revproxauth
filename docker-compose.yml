@@ -11,9 +11,9 @@ services:
                                            # If RADIUS is on the Docker host, use: 172.17.0.1
       RADIUS_SECRET: auth-proxy-secret1    # Change to your RADIUS shared secret
       RADIUS_PORT: 1812
-      RADIUS_NAS_IDENTIFIER: auth_proxy
-      LOGIN_DOMAIN: gpt.okulist.com        # Change to your domain
-      SYNAUTHPROXY_ADMIN_USERS: admin,igor # Comma-separated admin users (optional)
+      RADIUS_NAS_IDENTIFIER: synauthproxy
+      LOGIN_DOMAIN: mynas.mysynology.me     # Change to your Synology DDNS domain
+      SYNAUTHPROXY_ADMIN_USERS: admin,user1 # Comma-separated admin users (optional)
     ports:
       - "9000:9000"
     volumes:

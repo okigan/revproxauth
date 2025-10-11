@@ -11,9 +11,9 @@ services:
       RADIUS_SERVER: 192.168.10.12
       RADIUS_SECRET: auth-proxy-secret1
       RADIUS_PORT: 1812
-      RADIUS_NAS_IDENTIFIER: auth_proxy
-      LOGIN_DOMAIN: gpt.okulist.com
-      SYNAUTHPROXY_ADMIN_USERS: admin,igor
+      RADIUS_NAS_IDENTIFIER: synauthproxy
+      LOGIN_DOMAIN: mynas.mysynology.me
+      SYNAUTHPROXY_ADMIN_USERS: admin,user1
     ports:
       - "9000:9000"
     volumes:
