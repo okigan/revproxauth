@@ -33,7 +33,7 @@ You have multiple self-hosted applications (Docker containers, internal services
 
 ---
 
-![SynAuthProxy Management UI](doc/images/image.png)
+![SynAuthProxy Management UI](docs/images/image.png)
 
 ---
 

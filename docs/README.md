@@ -12,7 +12,7 @@ https://okigan.github.io/synauthproxy/setup-guide.html
 3. Under "Build and deployment":
    - Source: Deploy from a branch
    - Branch: `main`
-   - Folder: `/doc`
+   - Folder: `/docs`
 4. Click Save
 
-GitHub will automatically deploy the HTML files from the `/doc` directory.
+GitHub will automatically deploy the HTML files from the `/docs` directory.
