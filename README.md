@@ -100,9 +100,17 @@ graph LR
 ### Prerequisites
 
 - Synology NAS with DSM 7.0+
-- Docker and Docker Compose installed
+- Container Manager (Docker) installed via Package Center
 - RADIUS Server package installed on Synology
 - Domain name with DNS configured
+
+### Installation Methods
+
+Choose one:
+- **🎯 Method 1: Synology Container Manager GUI** (Recommended for most users)
+- **⚙️ Method 2: Docker Compose** (For advanced users who prefer CLI)
+
+---
 
 ### 1. Install RADIUS Server on Synology
 
@@ -123,11 +131,56 @@ Configure RADIUS:
 
 ### 2. Deploy SynAuthProxy
 
-```bash
-git clone https://github.com/yourusername/synauthproxy.git
-cd synauthproxy
+#### 🎯 Method 1: Synology Container Manager GUI (Recommended)
 
-# Edit docker-compose.yml with your settings
+1. **Download Image from Docker Hub**
+   - Open Container Manager on your Synology
+   - Go to **Registry** tab
+   - Search for `okigan/synauthproxy`
+   - Click **Download** and select `latest` tag
+
+2. **Launch Container**
+   - Go to **Container** tab
+   - Click downloaded image → **Launch**
+   - Container Name: `synauthproxy`
+
+3. **Configure Port Settings**
+   - Click **Advanced Settings**
+   - **Port Settings** tab
+   - Add: Local Port `9000` → Container Port `9000`
+
+4. **Configure Volume (for persistent config)**
+   - **Volume Settings** tab
+   - Click **Add Folder**
+   - Create/Select: `/docker/synauthproxy/config`
+   - Mount path: `/app/config`
+
+5. **Configure Environment Variables**
+   - **Environment** tab
+   - Add these variables:
+     ```
+     RADIUS_SERVER=192.168.10.12          # Your RADIUS server IP
+     RADIUS_SECRET=your-secret-here       # Your RADIUS shared secret
+     RADIUS_PORT=1812
+     RADIUS_NAS_IDENTIFIER=synauthproxy
+     LOGIN_DOMAIN=yourdomain.com          # Your domain
+     SYNAUTHPROXY_ADMIN_USERS=admin,user1 # Optional: admin users
+     ```
+
+6. **Apply and Start**
+   - Click **Apply** → **Done**
+   - Container will start automatically
+
+#### ⚙️ Method 2: Docker Compose (Advanced)
+
+```bash
+# Create directory
+mkdir -p ~/synauthproxy && cd ~/synauthproxy
+
+# Download docker-compose.yml
+wget https://raw.githubusercontent.com/okigan/synauthproxy/main/docker-compose.yml
+
+# Edit with your settings
 nano docker-compose.yml
 
 # Start the service

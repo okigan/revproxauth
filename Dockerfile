@@ -9,12 +9,21 @@ RUN pip install --no-cache-dir uv
 COPY pyproject.toml ./
 
 # Install dependencies with uv
-# RUN uv sync --frozen --no-cache
-RUN uv sync
+RUN uv sync --frozen
 
 # Copy application code and templates
-COPY main.py dictionary templates/ ./
+COPY main.py dictionary ./
+COPY templates/ ./templates/
 COPY config/ ./config/
+
+# Create config directory and initialize with empty config if needed
+RUN mkdir -p /app/config && \
+    if [ ! -f /app/config/synauthproxy.json ]; then \
+        echo '{"version":"1.0","mappings":[]}' > /app/config/synauthproxy.json; \
+    fi
+
+# Expose port
+EXPOSE 9000
 
 # Run FastAPI with uvicorn
 CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9000"]

@@ -1,0 +1,28 @@
+# Docker Compose for local development
+# This mounts the local directory for live code changes
+
+services:
+  synauthproxy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      RADIUS_SERVER: 192.168.10.12
+      RADIUS_SECRET: auth-proxy-secret1
+      RADIUS_PORT: 1812
+      RADIUS_NAS_IDENTIFIER: auth_proxy
+      LOGIN_DOMAIN: gpt.okulist.com
+      SYNAUTHPROXY_ADMIN_USERS: admin,igor
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./:/app                              # Mount source code for development
+      - ./config:/app/config                 # Mount config directory
+      - /etc/localtime:/etc/localtime:ro
+
+volumes:
+  app:
+    driver: local
+  config:
+    driver: local
