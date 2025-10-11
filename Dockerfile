@@ -15,6 +15,7 @@ LABEL synauthproxy.env.RADIUS_PORT="RADIUS server port (default: 1812)"
 LABEL synauthproxy.env.RADIUS_NAS_IDENTIFIER="NAS identifier (default: synauthproxy)"
 LABEL synauthproxy.env.LOGIN_DOMAIN="Domain for login redirects (required)"
 LABEL synauthproxy.env.SYNAUTHPROXY_ADMIN_USERS="Comma-separated admin usernames (optional)"
+LABEL synauthproxy.env.LOG_LEVEL="Logging level: DEBUG, INFO, WARNING, ERROR (default: INFO)"
 
 # Set default environment variables (users MUST override RADIUS_SERVER, RADIUS_SECRET, and LOGIN_DOMAIN)
 # Empty values for required/sensitive variables will be visible in Synology UI for users to fill in
@@ -24,6 +25,7 @@ ENV RADIUS_SERVER="" \
     RADIUS_NAS_IDENTIFIER="synauthproxy" \
     LOGIN_DOMAIN="" \
     SYNAUTHPROXY_ADMIN_USERS="" \
+    LOG_LEVEL="INFO" \
     NO_COLOR="1" \
     UV_NO_PROGRESS="1"
 

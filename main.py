@@ -22,8 +22,10 @@ templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Configure logging with simple format
+# Allow LOG_LEVEL environment variable to control logging level (default: INFO)
+log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(
-    level=logging.INFO,
+    level=getattr(logging, log_level, logging.INFO),
     format='%(asctime)s [%(levelname)s] %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
 )
@@ -158,7 +160,11 @@ async def login_page(request: Request, next: str = "/"):
 @app.post("/login")
 async def login(request: Request, username: str = Form(...), password: str = Form(...), next: str = Form("/")):
     try:
+        logging.info(f"Login attempt for user: {username}")
+        logging.debug(f"RADIUS Server: {RADIUS_SERVER}:{RADIUS_PORT}")
+        
         # Create RADIUS auth request (code 1 = Access-Request)
+        logging.debug("Creating RADIUS auth packet")
         req = client.CreateAuthPacket(code=1, User_Name=username.encode())
         
         # Set password - pyrad will encrypt it properly
@@ -168,7 +174,9 @@ async def login(request: Request, username: str = Form(...), password: str = For
         req["NAS-Identifier"] = RADIUS_NAS_IDENTIFIER.encode()
 
         # Send request and get response
+        logging.debug(f"Sending RADIUS packet to {RADIUS_SERVER}:{RADIUS_PORT}")
         reply = client.SendPacket(req)
+        logging.debug(f"Received RADIUS reply with code: {reply.code}")
 
         if reply.code == 2:  # Access-Accept
             response = RedirectResponse(url=next, status_code=status.HTTP_303_SEE_OTHER)
@@ -185,7 +193,9 @@ async def login(request: Request, username: str = Form(...), password: str = For
             })
 
     except Exception as e:
-        logging.error(f"Error: {str(e)}")
+        logging.error(f"Login error for user '{username}': {type(e).__name__}: {str(e)}")
+        logging.error(f"RADIUS connection details - Server: {RADIUS_SERVER}, Port: {RADIUS_PORT}")
+        logging.exception("Full traceback:")
         return templates.TemplateResponse("login.html", {
             "request": request,
             "next": next,
@@ -318,6 +328,7 @@ async def proxy_request(request: Request, dest_url: str, path: str):
     
     try:
         full_url = dest_url.rstrip('/') + '/' + path.lstrip('/')
+        logging.debug(f"Proxying {request.method} request to: {full_url}")
         
         # Create a client that will stay open during streaming
         client = httpx.AsyncClient(timeout=300.0)
@@ -357,7 +368,8 @@ async def proxy_request(request: Request, dest_url: str, path: str):
             media_type=resp.headers.get("content-type")
         )
     except Exception as e:
-        logging.error(f"Proxy error: {str(e)}")
+        logging.error(f"Proxy error for {request.method} {full_url}: {type(e).__name__}: {str(e)}")
+        logging.exception("Full proxy error traceback:")
         raise HTTPException(status_code=500, detail=str(e))
 
 # WebSocket upgrade handler using httpx for upgrade
@@ -369,6 +381,7 @@ async def handle_websocket_upgrade(request: Request, dest_url: str, path: str):
     # Build WebSocket URL from HTTP URL
     full_url = dest_url.rstrip('/') + '/' + path.lstrip('/')
     ws_url = full_url.replace('http://', 'ws://').replace('https://', 'wss://')
+    logging.info(f"WebSocket upgrade request to: {ws_url}")
     
     # Forward all WebSocket-related headers
     headers = {}
@@ -427,7 +440,8 @@ async def handle_websocket_upgrade(request: Request, dest_url: str, path: str):
                 )
                 
         except Exception as e:
-            logging.error(f"WebSocket upgrade error: {str(e)}")
+            logging.error(f"WebSocket upgrade error for {ws_url}: {type(e).__name__}: {str(e)}")
+            logging.exception("Full WebSocket error traceback:")
             await send({
                 "type": "websocket.close",
                 "code": 1011,
@@ -451,6 +465,7 @@ async def handle_request(request: Request, full_path: str = ""):
     # Strip port number from host header for matching
     host_without_port = host_header.split(':')[0] if ':' in host_header else host_header
     request_path = f"/{full_path}".rstrip("/") if full_path else "/"
+    logging.debug(f"Handling request: {request.method} {host_without_port}{request_path}")
     
     # Check mappings (reload on each request to pick up changes)
     for mapping in load_mappings():
