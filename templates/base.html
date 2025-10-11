@@ -64,7 +64,8 @@
             gap: 12px;
         }
 
-        .github-link {
+        .github-link,
+        .sponsor-link {
             display: flex;
             align-items: center;
             gap: 8px;
@@ -79,10 +80,21 @@
             border: 1px solid rgba(255, 255, 255, 0.15);
         }
 
-        .github-link:hover {
+        .github-link:hover,
+        .sponsor-link:hover {
             background: rgba(255, 255, 255, 0.15);
             border-color: rgba(255, 255, 255, 0.3);
             transform: translateY(-1px);
+        }
+
+        .sponsor-link {
+            background: rgba(255, 105, 180, 0.15);
+            border-color: rgba(255, 105, 180, 0.3);
+        }
+
+        .sponsor-link:hover {
+            background: rgba(255, 105, 180, 0.25);
+            border-color: rgba(255, 105, 180, 0.5);
         }
 
         .github-icon {
@@ -222,6 +234,10 @@
                 display: none;
             }
 
+            .sponsor-link span:last-of-type {
+                display: none;
+            }
+
             .user-badge {
                 padding: 6px 12px;
                 font-size: 13px;
@@ -250,6 +266,10 @@
         </div>
         <div class="header-right">
             {% block header_user %}{% endblock %}
+            <a href="https://github.com/sponsors/okigan" target="_blank" class="sponsor-link">
+                <span>❤️</span>
+                <span>Sponsor</span>
+            </a>
             <a href="https://github.com/okigan/synauthproxy" target="_blank" class="github-link">
                 <svg class="github-icon" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
                     <path fill-rule="evenodd"
