@@ -5,7 +5,8 @@ import json
 import sys
 
 from fastapi import FastAPI, Request, Form, HTTPException, status
-from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from pyrad.client import Client
@@ -16,7 +17,16 @@ app = FastAPI(
     # root_path="/synauthproxy"
     )
 templates = Jinja2Templates(directory="templates")
-logging.basicConfig(level=logging.INFO, filename='/app/synauthproxy.log')
+
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Configure logging with simple format
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
 # RADIUS config from environment
 RADIUS_SERVER = os.getenv("RADIUS_SERVER")
@@ -35,26 +45,27 @@ if not RADIUS_SECRET:
 
 if missing_vars:
     error_msg = f"""
-╔══════════════════════════════════════════════════════════════════════════════╗
-║ ❌ CONFIGURATION ERROR: Missing Required Environment Variables               ║
-╚══════════════════════════════════════════════════════════════════════════════╝
+================================================================================
+CONFIGURATION ERROR: Missing Required Environment Variables
+================================================================================
 
 The following required environment variables are not set:
   {', '.join(missing_vars)}
 
 Please configure these variables in your container environment:
 
-📋 Required Variables:
-  • RADIUS_SERVER  - IP address of your RADIUS server (e.g., 192.168.1.10)
-  • RADIUS_SECRET  - RADIUS shared secret
+Required Variables:
+  - RADIUS_SERVER: IP address of your RADIUS server (e.g., 192.168.1.10)
+  - RADIUS_SECRET: RADIUS shared secret
 
-📖 For setup instructions, see:
-   https://github.com/okigan/synauthproxy#readme
+For setup instructions, see:
+  https://github.com/okigan/synauthproxy#readme
 
 Container cannot start without these variables.
+================================================================================
 """
-    print(error_msg, file=sys.stderr)
-    logging.error(error_msg)
+    print(error_msg, file=sys.stderr, flush=True)
+    logging.error("Configuration error: Missing required environment variables: %s", ', '.join(missing_vars))
     sys.exit(1)
 
 # Print startup information
@@ -66,17 +77,17 @@ except Exception:
     pass
 
 startup_msg = f"""
-╔══════════════════════════════════════════════════════════════════════════════╗
-║ 🔐 SynAuthProxy Starting                                                     ║
-╚══════════════════════════════════════════════════════════════════════════════╝
-📍 Git Commit:    {git_commit}
-🌐 RADIUS Server: {RADIUS_SERVER}:{RADIUS_PORT}
-🔑 NAS ID:        {RADIUS_NAS_IDENTIFIER}
-🌍 Login Domain:  {LOGIN_DOMAIN if LOGIN_DOMAIN else '(not set)'}
-👥 Admin Users:   {', '.join(ADMIN_USERS) if ADMIN_USERS else '(all authenticated users)'}
+================================================================================
+SynAuthProxy Starting
+================================================================================
+Git Commit:    {git_commit}
+RADIUS Server: {RADIUS_SERVER}:{RADIUS_PORT}
+NAS ID:        {RADIUS_NAS_IDENTIFIER}
+Login Domain:  {LOGIN_DOMAIN if LOGIN_DOMAIN else '(not set)'}
+Admin Users:   {', '.join(ADMIN_USERS) if ADMIN_USERS else '(all authenticated users)'}
+================================================================================
 """
-print(startup_msg)
-logging.info(startup_msg)
+print(startup_msg, flush=True)
 
 # Initialize RADIUS client and dictionary
 radius_dict = Dictionary("/app/dictionary")
@@ -197,6 +208,10 @@ def get_username_from_cookie(request: Request) -> str:
 @app.get("/health")
 async def health():
     return {"status": "healthy"}
+
+@app.get("/favicon.ico")
+async def favicon():
+    return FileResponse("static/favicon.svg", media_type="image/svg+xml")
 
 @app.get("/mappings", response_class=HTMLResponse)
 async def mappings_page(request: Request):

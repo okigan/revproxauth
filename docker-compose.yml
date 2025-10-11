@@ -8,6 +8,7 @@ services:
     restart: unless-stopped
     environment:
       RADIUS_SERVER: 192.168.10.12        # Change to your RADIUS server IP
+                                           # If RADIUS is on the Docker host, use: 172.17.0.1
       RADIUS_SECRET: auth-proxy-secret1    # Change to your RADIUS shared secret
       RADIUS_PORT: 1812
       RADIUS_NAS_IDENTIFIER: auth_proxy

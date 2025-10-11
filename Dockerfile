@@ -23,7 +23,9 @@ ENV RADIUS_SERVER="" \
     RADIUS_PORT="1812" \
     RADIUS_NAS_IDENTIFIER="synauthproxy" \
     LOGIN_DOMAIN="" \
-    SYNAUTHPROXY_ADMIN_USERS=""
+    SYNAUTHPROXY_ADMIN_USERS="" \
+    NO_COLOR="1" \
+    UV_NO_PROGRESS="1"
 
 WORKDIR /app
 
@@ -39,6 +41,7 @@ RUN uv sync --frozen
 # Copy application code and templates
 COPY main.py dictionary ./
 COPY templates/ ./templates/
+COPY static/ ./static/
 COPY config/ ./config/
 
 # Capture Git commit hash as build arg and store in file
@@ -54,5 +57,5 @@ RUN mkdir -p /app/config && \
 # Expose port
 EXPOSE 9000
 
-# Run FastAPI with uvicorn
+# Run FastAPI with uvicorn (no colors for cleaner Synology logs)
 CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9000"]

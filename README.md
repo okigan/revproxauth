@@ -161,7 +161,7 @@ Configure RADIUS:
      
      **Required Variables:**
      ```
-     RADIUS_SERVER=192.168.10.12          # Your RADIUS server IP
+     RADIUS_SERVER=192.168.10.12          # Your RADIUS server IP (see note below)
      RADIUS_SECRET=your-secret-here       # Your RADIUS shared secret  
      LOGIN_DOMAIN=yourdomain.com          # Your domain
      ```
@@ -172,6 +172,13 @@ Configure RADIUS:
      RADIUS_NAS_IDENTIFIER=synauthproxy   # Default: synauthproxy
      SYNAUTHPROXY_ADMIN_USERS=admin,user1 # Comma-separated admin users (empty = all users can edit)
      ```
+   
+   💡 **Connecting to RADIUS Server on Synology Host:**
+   
+   If your RADIUS server runs on the same Synology NAS, use one of these for `RADIUS_SERVER`:
+   - `172.17.0.1` - Docker bridge gateway (most reliable on Synology)
+   - `host.docker.internal` - Works on newer Docker versions
+   - Your Synology's LAN IP (e.g., `192.168.1.100`)
 
 6. **Apply and Start**
    - Click **Apply** → **Done**
