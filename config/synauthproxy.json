@@ -1,0 +1,35 @@
+{
+  "version": "1.0",
+  "mappings": [
+    {
+      "match_url": "app1.mysynologydomain.com",
+      "http_dest": "http://localhost:8080",
+      "flags": []
+    },
+    {
+      "match_url": "mysynologydomain.com/app2",
+      "http_dest": "http://localhost:8081",
+      "flags": ["strip_path"]
+    },
+    {
+      "match_url": "test.mysynologydomain.com/hee",
+      "http_dest": "http://he.net",
+      "flags": []
+    },
+    {
+      "match_url": "test.mysynologydomain.com/he",
+      "http_dest": "https://he.net",
+      "flags": []
+    },
+    {
+      "match_url": "test.mysynologydomain.com",
+      "http_dest": "https://www.google.com",
+      "flags": []
+    },
+    {
+      "match_url": "gpt.okulist.com",
+      "http_dest": "http://192.168.10.25:8080",
+      "flags": []
+    }
+  ]
+}

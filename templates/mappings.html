@@ -1,0 +1,415 @@
+{% extends "base.html" %}
+
+{% block title %}Synology Authentication Proxy Mappings{% endblock %}
+
+{% block additional_styles %}
+    .table-container {
+        background: white;
+        border-radius: 3px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        border: 1px solid #d7dce5;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th,
+    td {
+        padding: 12px 16px;
+        text-align: left;
+    }
+
+    th {
+        background: #f7f7f7;
+        color: #555;
+        font-weight: 600;
+        font-size: 13px;
+        border-bottom: 2px solid #d7dce5;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    td {
+        border-bottom: 1px solid #e8e8e8;
+        color: #333;
+        font-size: 13px;
+        vertical-align: middle;
+        background: white;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    tbody tr:hover td {
+        background-color: #f0f6ff;
+    }
+
+    .editable-input {
+        width: 100%;
+        padding: 6px 10px;
+        border: 1px solid transparent;
+        border-radius: 3px;
+        font-size: 13px;
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        background-color: transparent;
+        transition: all 0.15s ease;
+    }
+
+    .editable-input:focus {
+        outline: none;
+        border-color: #0084d6;
+        background-color: #f8fbff;
+        box-shadow: 0 0 0 2px rgba(0, 132, 214, 0.1);
+    }
+
+    .editable-input.changed {
+        background-color: #fffbf0;
+        border-color: #f5a623;
+    }
+
+    .new-row td {
+        background-color: #f7f9fc;
+        border-top: 2px solid #d7dce5;
+    }
+
+    .new-row .editable-input {
+        background-color: white;
+        border-color: #b8c0cc;
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 4px;
+        flex-wrap: nowrap;
+    }
+
+    .save-btn {
+        background: #5fad56;
+        display: none;
+    }
+
+    .save-btn:hover {
+        background: #4e9944;
+    }
+
+    .save-btn.visible {
+        display: inline-block;
+    }
+
+    .delete-btn {
+        background: #d84b4b;
+    }
+
+    .delete-btn:hover {
+        background: #c43333;
+    }
+
+    .move-btn {
+        background: #888;
+        padding: 5px 9px;
+        font-size: 11px;
+        min-width: 28px;
+    }
+
+    .move-btn:hover {
+        background: #777;
+    }
+
+    .add-btn {
+        background: #5fad56;
+    }
+
+    .add-btn:hover {
+        background: #4e9944;
+    }
+
+    .order-cell {
+        width: 80px;
+        text-align: center;
+    }
+
+    .actions-cell {
+        width: 200px;
+    }
+
+    .checkbox-cell {
+        width: 80px;
+        text-align: center;
+    }
+
+    input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+        accent-color: #0084d6;
+    }
+
+    .disabled-row td {
+        background-color: #fff9e6 !important;
+        border-bottom: 1px solid #ffe999;
+    }
+
+    .disabled-row:hover td {
+        background-color: #fff3cc !important;
+    }
+
+    @media (max-width: 768px) {
+        th,
+        td {
+            padding: 8px 10px;
+            font-size: 12px;
+        }
+    }
+{% endblock %}
+
+{% block header_user %}
+    {% if username %}
+    <div class="user-badge">
+        <span class="username">{{ username }}</span>
+        {% if not is_admin %}<span class="role">Read-only</span>{% endif %}
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        {% if unrestricted_access %}
+        <p style="color: #d84b4b; margin-bottom: 20px; padding: 12px; background: #fff9e6; border-radius: 3px; border: 1px solid #f5a623; display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 18px;">⚠️</span>
+            <span><strong>Security Warning:</strong> Mapping editing is unrestricted! All authenticated users can modify mappings. Set <code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 2px; font-family: monospace;">SYNAUTHPROXY_ADMIN_USERS</code> environment variable to restrict access.</span>
+        </p>
+        {% endif %}
+        {% if username and not is_admin %}
+        <p
+            style="color: #d84b4b; margin-bottom: 20px; padding: 12px; background: #fee; border-radius: 3px; border: 1px solid #fcc;">
+            ⚠️ You are viewing in read-only mode. Contact an administrator to modify mappings.
+        </p>
+        {% endif %}
+        <div class="table-container">
+            <table id="mappingsTable">
+                <thead>
+                    <tr>
+                        <th class="checkbox-cell">Disabled</th>
+                        <th>Source</th>
+                        <th>Destination</th>
+                        <th class="checkbox-cell">Strip Path</th>
+                        <th class="order-cell">Order</th>
+                        <th class="actions-cell">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for mapping in mappings %}
+                    <tr data-index="{{ loop.index0 }}"
+                        class="{% if 'disabled' in mapping.get('flags', []) %}disabled-row{% endif %}">
+                        <td class="checkbox-cell">
+                            <input type="checkbox" class="disabled-checkbox" {% if 'disabled' in mapping.get('flags',
+                                []) %}checked{% endif %} data-index="{{ loop.index0 }}" onchange="toggleDisabled(this)"
+                                {% if not is_admin %}disabled{% endif %}>
+                        </td>
+                        <td><input type="text" class="editable-input"
+                                value="{{ mapping.get('match_url', (mapping.get('host', '') + ('/' + mapping.get('path', '') if mapping.get('path', '') else ''))) }}"
+                                data-field="match_url" data-index="{{ loop.index0 }}"
+                                data-original="{{ mapping.get('match_url', (mapping.get('host', '') + ('/' + mapping.get('path', '') if mapping.get('path', '') else ''))) }}"
+                                onchange="markChanged(this)" {% if not is_admin %}readonly{% endif %}></td>
+                        <td><input type="text" class="editable-input" value="{{ mapping.http_dest }}"
+                                data-field="http_dest" data-index="{{ loop.index0 }}"
+                                data-original="{{ mapping.http_dest }}" onchange="markChanged(this)" {% if not is_admin
+                                %}readonly{% endif %}></td>
+                        <td class="checkbox-cell">
+                            <input type="checkbox" class="strip-path-checkbox" {% if 'strip_path' in
+                                mapping.get('flags', []) %}checked{% endif %} data-index="{{ loop.index0 }}"
+                                onchange="markChanged(this)" {% if not is_admin %}disabled{% endif %}>
+                        </td>
+                        <td class="order-cell">
+                            <div class="btn-group">
+                                <button class="move-btn" onclick="moveMapping({{ loop.index0 }}, -1)" {% if
+                                    loop.index0==0 or not is_admin %}disabled{% endif %}>↑</button>
+                                <button class="move-btn" onclick="moveMapping({{ loop.index0 }}, 1)" {% if
+                                    loop.index0==mappings|length - 1 or not is_admin %}disabled{% endif %}>↓</button>
+                            </div>
+                        </td>
+                        <td class="actions-cell">
+                            <div class="btn-group">
+                                {% if is_admin %}
+                                <button class="save-btn" id="save-{{ loop.index0 }}"
+                                    onclick="saveMapping({{ loop.index0 }})">Save</button>
+                                <form method="post" action="/mappings/delete/{{ loop.index0 }}"
+                                    style="margin: 0; display: inline;">
+                                    <button type="submit" class="delete-btn"
+                                        onclick="return confirm('Delete this mapping?')">Delete</button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if is_admin %}
+                    <tr class="new-row">
+                        <td class="checkbox-cell">
+                            <input type="checkbox" id="new-disabled">
+                        </td>
+                        <td><input type="text" class="editable-input" id="new-match_url"
+                                placeholder="app.domain.com/path"></td>
+                        <td><input type="text" class="editable-input" id="new-http_dest"
+                                placeholder="http://localhost:8080"></td>
+                        <td class="checkbox-cell">
+                            <input type="checkbox" id="new-strip_path">
+                        </td>
+                        <td class="order-cell">
+                            <button class="add-btn" onclick="addMapping()">Add</button>
+                        </td>
+                        <td class="actions-cell"></td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+{% block additional_scripts %}
+    // Add Enter key support for new row
+    const newRowInputs = document.querySelectorAll('.new-row .editable-input');
+    newRowInputs.forEach(input => {
+        input.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                addMapping();
+            }
+        });
+    });
+{% endblock %}
+
+{% block page_scripts %}
+        function markChanged(input) {
+            const index = input.getAttribute('data-index');
+            const saveBtn = document.getElementById('save-' + index);
+
+            if (input.type === 'checkbox') {
+                if (saveBtn) saveBtn.classList.add('visible');
+            } else {
+                const original = input.getAttribute('data-original');
+                const current = input.value;
+                if (current !== original) {
+                    input.classList.add('changed');
+                    if (saveBtn) saveBtn.classList.add('visible');
+                } else {
+                    input.classList.remove('changed');
+                    checkIfAnyChanged(index);
+                }
+            }
+        }
+
+        function checkIfAnyChanged(index) {
+            const row = document.querySelector(`tr[data-index="${index}"]`);
+            const changedInputs = row.querySelectorAll('.editable-input.changed');
+            const saveBtn = document.getElementById('save-' + index);
+            if (changedInputs.length === 0 && saveBtn) {
+                saveBtn.classList.remove('visible');
+            }
+        }
+
+        function toggleDisabled(checkbox) {
+            const index = checkbox.getAttribute('data-index');
+            const row = checkbox.closest('tr');
+
+            if (checkbox.checked) {
+                row.classList.add('disabled-row');
+            } else {
+                row.classList.remove('disabled-row');
+            }
+
+            // Auto-save the disabled state
+            saveMapping(index);
+        }
+
+        function saveMapping(index) {
+            const row = document.querySelector(`tr[data-index="${index}"]`);
+            const inputs = row.querySelectorAll('.editable-input');
+            const stripPathCheckbox = row.querySelector('.strip-path-checkbox');
+            const disabledCheckbox = row.querySelector('.disabled-checkbox');
+            const data = {};
+
+            inputs.forEach(input => {
+                const field = input.getAttribute('data-field');
+                data[field] = input.value;
+            });
+
+            // Build flags array
+            const flags = [];
+            if (stripPathCheckbox && stripPathCheckbox.checked) {
+                flags.push('strip_path');
+            }
+            if (disabledCheckbox && disabledCheckbox.checked) {
+                flags.push('disabled');
+            }
+            data['flags'] = flags.join(',');
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/mappings/update/${index}`;
+
+            for (const [key, value] of Object.entries(data)) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value;
+                form.appendChild(input);
+            }
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        function addMapping() {
+            const match_url = document.getElementById('new-match_url').value;
+            const http_dest = document.getElementById('new-http_dest').value;
+            const strip_path = document.getElementById('new-strip_path').checked;
+            const disabled = document.getElementById('new-disabled').checked;
+
+            if (!match_url || !http_dest) {
+                alert('Match URL and Destination are required');
+                return;
+            }
+
+            // Build flags array
+            const flags = [];
+            if (strip_path) flags.push('strip_path');
+            if (disabled) flags.push('disabled');
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/mappings/add';
+
+            const fields = { match_url, http_dest, flags: flags.join(',') };
+            for (const [key, value] of Object.entries(fields)) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value;
+                form.appendChild(input);
+            }
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        function moveMapping(index, direction) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/mappings/move/${index}`;
+
+            const dirInput = document.createElement('input');
+            dirInput.type = 'hidden';
+            dirInput.name = 'direction';
+            dirInput.value = direction;
+            form.appendChild(dirInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+{% endblock %}
