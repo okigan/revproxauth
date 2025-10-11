@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SynAuthProxy Setup Guide - Synology Container Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .carousel-container {
+            position: relative;
+            padding: 40px 60px;
+        }
+
+        .carousel {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .carousel-track {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .carousel-slide {
+            min-width: 100%;
+            padding: 20px;
+        }
+
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            line-height: 40px;
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .slide-title {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .slide-description {
+            font-size: 16px;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .slide-image {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            margin-top: 20px;
+        }
+
+        .code-block {
+            background: #f5f7fa;
+            border: 1px solid #e1e8ed;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+            margin: 15px 0;
+            overflow-x: auto;
+        }
+
+        .code-block .var-name {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .code-block .var-value {
+            color: #27ae60;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+        }
+
+        .nav-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-button:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .step-indicator {
+            display: flex;
+            gap: 10px;
+        }
+
+        .step-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ddd;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .step-dot.active {
+            background: #667eea;
+            transform: scale(1.3);
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #f0f0f0;
+            margin: 20px 0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+        }
+
+        .footer {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .carousel-container {
+                padding: 30px 20px;
+            }
+
+            .header h1 {
+                font-size: 24px;
+            }
+
+            .slide-title {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><span>🔐</span> SynAuthProxy Setup Guide</h1>
+            <p>Step-by-step walkthrough for Synology Container Manager</p>
+        </div>
+
+        <div class="carousel-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <div class="carousel">
+                <div class="carousel-track" id="carouselTrack">
+                    
+                    <!-- Step 1 -->
+                    <div class="carousel-slide">
+                        <div class="step-number">1</div>
+                        <h2 class="slide-title">Install RADIUS Server</h2>
+                        <div class="slide-description">
+                            <p>First, install the RADIUS Server package from Synology Package Center. This provides authentication services for SynAuthProxy.</p>
+                            <ol style="margin: 15px 0 15px 20px; line-height: 1.8;">
+                                <li>Open <strong>Package Center</strong> on your Synology NAS</li>
+                                <li>Search for "RADIUS Server"</li>
+                                <li>Click <strong>Install</strong></li>
+                                <li>After installation, open RADIUS Server and enable it on port 1812</li>
+                                <li>Set a shared secret (remember this for later!)</li>
+                                <li>Add client: <code>127.0.0.1</code> or <code>172.17.0.1</code> with the same secret</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="carousel-slide">
+                        <div class="step-number">2</div>
+                        <h2 class="slide-title">Open Container Manager</h2>
+                        <div class="slide-description">
+                            <p>Navigate to Container Manager (Docker) on your Synology NAS. If you don't have it installed, get it from Package Center first.</p>
+                            <ol style="margin: 15px 0 15px 20px; line-height: 1.8;">
+                                <li>Open <strong>Container Manager</strong> from the main menu</li>
+                                <li>Go to the <strong>Registry</strong> tab</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="carousel-slide">
+                        <div class="step-number">3</div>
+                        <h2 class="slide-title">Download SynAuthProxy Image</h2>
+                        <div class="slide-description">
+                            <p>Pull the official SynAuthProxy image from Docker Hub.</p>
+                            <ol style="margin: 15px 0 15px 20px; line-height: 1.8;">
+                                <li>In the <strong>Registry</strong> tab, search for: <code>okigan/synauthproxy</code></li>
+                                <li>Click on the result and select <strong>Download</strong></li>
+                                <li>Choose the <strong>latest</strong> tag</li>
+                                <li>Wait for the download to complete (check the <strong>Image</strong> tab)</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="carousel-slide">
+                        <div class="step-number">4</div>
+                        <h2 class="slide-title">Launch Container</h2>
+                        <div class="slide-description">
+                            <p>Create a new container from the downloaded image.</p>
+                            <ol style="margin: 15px 0 15px 20px; line-height: 1.8;">
+                                <li>Go to the <strong>Container</strong> tab</li>
+                                <li>Click the downloaded <code>okigan/synauthproxy</code> image</li>
+                                <li>Click <strong>Launch</strong></li>
+                                <li>Set Container Name to: <code>synauthproxy</code></li>
+                                <li>Click <strong>Advanced Settings</strong></li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Step 5 -->
+                    <div class="carousel-slide">
+                        <div class="step-number">5</div>
+                        <h2 class="slide-title">Configure Port Mapping</h2>
+                        <div class="slide-description">
+                            <p>Map the container port to your host so you can access the web interface.</p>
+                            <ol style="margin: 15px 0 15px 20px; line-height: 1.8;">
+                                <li>In Advanced Settings, go to <strong>Port Settings</strong> tab</li>
+                                <li>Click <strong>+ Add</strong></li>
+                                <li>Local Port: <code>9000</code></li>
+                                <li>Container Port: <code>9000</code></li>
+                                <li>Type: <code>TCP</code></li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Step 6 -->
+                    <div class="carousel-slide">
+                        <div class="step-number">6</div>
+                        <h2 class="slide-title">Configure Volume for Persistent Storage</h2>
+                        <div class="slide-description">
+                            <p>Mount a volume to persist your configuration across container restarts.</p>
+                            <ol style="margin: 15px 0 15px 20px; line-height: 1.8;">
+                                <li>Go to <strong>Volume Settings</strong> tab</li>
+                                <li>Click <strong>Add Folder</strong></li>
+                                <li>Create new folder: <code>/docker/synauthproxy/config</code></li>
+                                <li>Mount path: <code>/app/config</code></li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Step 7 -->
+                    <div class="carousel-slide">
+                        <div class="step-number">7</div>
+                        <h2 class="slide-title">Set Environment Variables</h2>
+                        <div class="slide-description">
+                            <p>Configure the essential settings. The container will show these variables - you just need to fill in the values!</p>
+                            <div class="code-block">
+<span class="var-name">RADIUS_SERVER</span>=<span class="var-value">172.17.0.1</span>          <span style="color: #999">← Docker host IP</span>
+<span class="var-name">RADIUS_SECRET</span>=<span class="var-value">your-secret-here</span>   <span style="color: #999">← From RADIUS config</span>
+<span class="var-name">RADIUS_PORT</span>=<span class="var-value">1812</span>                  <span style="color: #999">← Default port</span>
+<span class="var-name">LOGIN_DOMAIN</span>=<span class="var-value">https://nas.example.com:9000</span>
+<span class="var-name">SYNAUTHPROXY_ADMIN_USERS</span>=<span class="var-value">admin</span>   <span style="color: #999">← Optional</span>
+                            </div>
+                            <p style="margin-top: 15px;">💡 <strong>Tip:</strong> Use <code>172.17.0.1</code> for RADIUS_SERVER if your RADIUS runs on the same Synology NAS.</p>
+                        </div>
+                    </div>
+
+                    <!-- Step 8 -->
+                    <div class="carousel-slide">
+                        <div class="step-number">8</div>
+                        <h2 class="slide-title">Start Container</h2>
+                        <div class="slide-description">
+                            <p>Review your settings and launch the container!</p>
+                            <ol style="margin: 15px 0 15px 20px; line-height: 1.8;">
+                                <li>Click <strong>Apply</strong> then <strong>Done</strong></li>
+                                <li>The container will start automatically</li>
+                                <li>Check logs to verify it started successfully</li>
+                                <li>You should see: <code>SynAuthProxy Starting</code> with your configuration</li>
+                            </ol>
+                            <p style="margin-top: 15px;">🎉 Container is now running on <code>http://YOUR-NAS-IP:9000</code></p>
+                        </div>
+                    </div>
+
+                    <!-- Step 9 -->
+                    <div class="carousel-slide">
+                        <div class="step-number">9</div>
+                        <h2 class="slide-title">Configure Reverse Proxy</h2>
+                        <div class="slide-description">
+                            <p>Set up Synology's built-in reverse proxy to route traffic through SynAuthProxy.</p>
+                            <ol style="margin: 15px 0 15px 20px; line-height: 1.8;">
+                                <li>Open <strong>Control Panel</strong> → <strong>Login Portal</strong> → <strong>Advanced</strong></li>
+                                <li>Go to <strong>Reverse Proxy</strong> tab</li>
+                                <li>Click <strong>Create</strong></li>
+                                <li><strong>Source:</strong> <code>https://app.yourdomain.com:443</code></li>
+                                <li><strong>Destination:</strong> <code>http://localhost:9000</code></li>
+                                <li>✅ Enable <strong>WebSocket</strong></li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Step 10 -->
+                    <div class="carousel-slide">
+                        <div class="step-number">✓</div>
+                        <h2 class="slide-title">Setup Complete! 🎉</h2>
+                        <div class="slide-description">
+                            <p style="font-size: 18px; margin-bottom: 20px;">Your SynAuthProxy is now ready to use!</p>
+                            <div style="background: #e8f5e9; border-left: 4px solid #4caf50; padding: 15px; border-radius: 4px; margin: 20px 0;">
+                                <h3 style="color: #2e7d32; margin-bottom: 10px;">Next Steps:</h3>
+                                <ol style="margin: 10px 0 10px 20px; line-height: 1.8; color: #1b5e20;">
+                                    <li>Visit <code>https://yourdomain.com/synauthproxy</code></li>
+                                    <li>Log in with your Synology credentials</li>
+                                    <li>Add your first application mapping</li>
+                                    <li>Start using centralized authentication!</li>
+                                </ol>
+                            </div>
+                            <p style="margin-top: 20px; text-align: center;">
+                                <a href="https://github.com/okigan/synauthproxy" style="display: inline-block; background: #667eea; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 500;">View Full Documentation</a>
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="navigation">
+                <button class="nav-button" id="prevBtn" onclick="moveSlide(-1)" disabled>
+                    <span>←</span> Previous
+                </button>
+                
+                <div class="step-indicator" id="stepIndicator"></div>
+                
+                <button class="nav-button" id="nextBtn" onclick="moveSlide(1)">
+                    Next <span>→</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="footer">
+            Need help? Check the <a href="https://github.com/okigan/synauthproxy#readme" target="_blank">README</a> or open an <a href="https://github.com/okigan/synauthproxy/issues" target="_blank">issue on GitHub</a>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const track = document.getElementById('carouselTrack');
+        const slides = track.children;
+        const totalSlides = slides.length;
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressFill = document.getElementById('progressFill');
+        const stepIndicator = document.getElementById('stepIndicator');
+
+        // Create step dots
+        for (let i = 0; i < totalSlides; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'step-dot';
+            if (i === 0) dot.classList.add('active');
+            dot.onclick = () => goToSlide(i);
+            stepIndicator.appendChild(dot);
+        }
+
+        function updateCarousel() {
+            track.style.transform = `translateX(-${currentSlide * 100}%)`;
+            
+            // Update buttons
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === totalSlides - 1;
+            
+            // Update progress bar
+            const progress = ((currentSlide + 1) / totalSlides) * 100;
+            progressFill.style.width = `${progress}%`;
+            
+            // Update step indicators
+            const dots = stepIndicator.children;
+            for (let i = 0; i < dots.length; i++) {
+                dots[i].classList.toggle('active', i === currentSlide);
+            }
+        }
+
+        function moveSlide(direction) {
+            currentSlide += direction;
+            if (currentSlide < 0) currentSlide = 0;
+            if (currentSlide >= totalSlides) currentSlide = totalSlides - 1;
+            updateCarousel();
+        }
+
+        function goToSlide(index) {
+            currentSlide = index;
+            updateCarousel();
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') moveSlide(-1);
+            if (e.key === 'ArrowRight') moveSlide(1);
+        });
+
+        // Initialize
+        updateCarousel();
+    </script>
+</body>
+</html>

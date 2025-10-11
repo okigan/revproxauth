@@ -104,6 +104,14 @@ graph LR
 - RADIUS Server package installed on Synology
 - Domain name with DNS configured
 
+### 📖 Interactive Setup Guide
+
+**New to SynAuthProxy?** Follow our step-by-step visual guide:
+
+👉 **[Open Interactive Setup Walkthrough](https://okigan.github.io/synauthproxy/setup-guide.html)** 👈
+
+Or follow the manual installation steps below:
+
 ### Installation Methods
 
 Choose one:
