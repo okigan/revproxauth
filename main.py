@@ -213,10 +213,10 @@ async def health():
 async def favicon():
     return FileResponse("static/favicon.svg", media_type="image/svg+xml")
 
-@app.get("/mappings", response_class=HTMLResponse)
+@app.get("/synauthproxy", response_class=HTMLResponse)
 async def mappings_page(request: Request):
     if "auth=authenticated" not in request.headers.get("cookie", ""):
-        login_url = get_login_url(request, "/mappings")
+        login_url = get_login_url(request, "/synauthproxy")
         return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
     
     username = get_username_from_cookie(request)
@@ -230,7 +230,7 @@ async def mappings_page(request: Request):
         "unrestricted_access": not ADMIN_USERS
     })
 
-@app.post("/mappings/add")
+@app.post("/synauthproxy/add")
 async def add_mapping(request: Request, match_url: str = Form(...), 
                      http_dest: str = Form(...), flags: str = Form("")):
     if "auth=authenticated" not in request.headers.get("cookie", ""):
@@ -246,9 +246,9 @@ async def add_mapping(request: Request, match_url: str = Form(...),
     new_mapping = {"match_url": match_url, "http_dest": http_dest, "flags": flags_list}
     mappings.append(new_mapping)
     save_mappings(mappings)
-    return RedirectResponse(url="/mappings", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(url="/synauthproxy", status_code=status.HTTP_303_SEE_OTHER)
 
-@app.post("/mappings/update/{index}")
+@app.post("/synauthproxy/update/{index}")
 async def update_mapping(request: Request, index: int, match_url: str = Form(...), 
                         http_dest: str = Form(...), flags: str = Form("")):
     if "auth=authenticated" not in request.headers.get("cookie", ""):
@@ -264,9 +264,9 @@ async def update_mapping(request: Request, index: int, match_url: str = Form(...
         flags_list = [f.strip() for f in flags.split(",") if f.strip()]
         mappings[index] = {"match_url": match_url, "http_dest": http_dest, "flags": flags_list}
         save_mappings(mappings)
-    return RedirectResponse(url="/mappings", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(url="/synauthproxy", status_code=status.HTTP_303_SEE_OTHER)
 
-@app.post("/mappings/move/{index}")
+@app.post("/synauthproxy/move/{index}")
 async def move_mapping(request: Request, index: int, direction: int = Form(...)):
     if "auth=authenticated" not in request.headers.get("cookie", ""):
         raise HTTPException(status_code=401, detail="Authentication required")
@@ -282,9 +282,9 @@ async def move_mapping(request: Request, index: int, direction: int = Form(...))
             # Swap the mappings
             mappings[index], mappings[new_index] = mappings[new_index], mappings[index]
             save_mappings(mappings)
-    return RedirectResponse(url="/mappings", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(url="/synauthproxy", status_code=status.HTTP_303_SEE_OTHER)
 
-@app.post("/mappings/delete/{index}")
+@app.post("/synauthproxy/delete/{index}")
 async def delete_mapping(request: Request, index: int):
     if "auth=authenticated" not in request.headers.get("cookie", ""):
         raise HTTPException(status_code=401, detail="Authentication required")
@@ -297,7 +297,7 @@ async def delete_mapping(request: Request, index: int):
     if 0 <= index < len(mappings):
         mappings.pop(index)
         save_mappings(mappings)
-    return RedirectResponse(url="/mappings", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(url="/synauthproxy", status_code=status.HTTP_303_SEE_OTHER)
 
 # HTTP proxy handler with WebSocket upgrade support
 async def proxy_request(request: Request, dest_url: str, path: str):

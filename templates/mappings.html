@@ -238,7 +238,7 @@
                                 {% if is_admin %}
                                 <button class="save-btn" id="save-{{ loop.index0 }}"
                                     onclick="saveMapping({{ loop.index0 }})">Save</button>
-                                <form method="post" action="/mappings/delete/{{ loop.index0 }}"
+                                <form method="post" action="/synauthproxy/delete/{{ loop.index0 }}"
                                     style="margin: 0; display: inline;">
                                     <button type="submit" class="delete-btn"
                                         onclick="return confirm('Delete this mapping?')">Delete</button>
@@ -351,7 +351,7 @@
 
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = `/mappings/update/${index}`;
+            form.action = `/synauthproxy/update/${index}`;
 
             for (const [key, value] of Object.entries(data)) {
                 const input = document.createElement('input');
@@ -383,7 +383,7 @@
 
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '/mappings/add';
+            form.action = '/synauthproxy/add';
 
             const fields = { match_url, http_dest, flags: flags.join(',') };
             for (const [key, value] of Object.entries(fields)) {
@@ -401,7 +401,7 @@
         function moveMapping(index, direction) {
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = `/mappings/move/${index}`;
+            form.action = `/synauthproxy/move/${index}`;
 
             const dirInput = document.createElement('input');
             dirInput.type = 'hidden';

@@ -215,7 +215,7 @@ Create rules for each subdomain:
 
 ### 4. Configure Mappings
 
-Visit `https://yourdomain.com/mappings` and add your apps:
+Visit `https://yourdomain.com/synauthproxy` and add your apps:
 
 | Match URL | Destination | Flags |
 |-----------|-------------|-------|
@@ -267,7 +267,7 @@ services:
 
 ### Mappings Configuration
 
-Edit `config/synauthproxy.json` or use the web UI at `https://yourdomain.com/mappings`:
+Edit `config/synauthproxy.json` or use the web UI at `https://yourdomain.com/synauthproxy`:
 
 ```json
 {
