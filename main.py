@@ -448,10 +448,22 @@ async def proxy_request(request: Request, dest_url: str, path: str):
         }
 
         # Stream the response - keep client and response alive until streaming is done
+        # If the backend is sending Server-Sent Events (SSE), forward each
+        # line immediately so the client receives events as soon as they
+        # arrive instead of waiting for a buffer to fill.
+        content_type = (resp.headers.get("content-type") or "").lower()
+        is_sse = "text/event-stream" in content_type
+
         async def generate():
             try:
-                async for chunk in resp.aiter_bytes(chunk_size=8192):
-                    yield chunk
+                if is_sse:
+                    # aiter_lines yields text without newline; re-add newline and
+                    # encode to bytes for StreamingResponse.
+                    async for line in resp.aiter_lines():
+                        yield (line + "\n").encode("utf-8")
+                else:
+                    async for chunk in resp.aiter_bytes(chunk_size=8192):
+                        yield chunk
             finally:
                 await resp.aclose()
                 await client.aclose()
