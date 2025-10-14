@@ -7,6 +7,7 @@ from typing import Any
 
 import httpx
 import jwt
+import socket
 from fastapi import FastAPI, Form, HTTPException, Request, status
 from fastapi.responses import (
     FileResponse,
@@ -87,6 +88,11 @@ Container cannot start without these variables.
 
 # Print startup information
 git_commit = "unknown"
+# Get local IP address of the container
+try:
+    local_ip = socket.gethostbyname(socket.gethostname())
+except Exception:
+    local_ip = "unknown"
 try:
     with open("/app/git_commit.txt") as f:
         git_commit = f.read().strip()
@@ -101,6 +107,7 @@ Git Commit:    {git_commit}
 RADIUS Server: {RADIUS_SERVER}:{RADIUS_PORT}
 NAS ID:        {RADIUS_NAS_IDENTIFIER}
 Login Domain:  {LOGIN_DOMAIN if LOGIN_DOMAIN else "(not set)"}
+Local IP:      {local_ip}
 Admin Users:   {", ".join(ADMIN_USERS) if ADMIN_USERS else "(all authenticated users)"}
 ================================================================================
 """
