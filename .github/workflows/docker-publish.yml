@@ -78,7 +78,8 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             type=raw,value=latest,enable={{is_default_branch}}
-            type=label,value=git-hash=${{ github.sha }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
