@@ -280,7 +280,7 @@ async def login(
                     logging.debug(f"  - Allowed groups: {ag}")
                     logging.debug(f"  - User allowed by username: {user_allowed}")
                     logging.debug(f"  - No restrictions: {not au and not ag}")
-                    
+
                     # If user is allowed or mapping has no restrictions, and the URL is valid
                     if (user_allowed or (not au and not ag)) and match_url:
                         logging.debug(f"  => Adding {match_url} to allowed URLs")
