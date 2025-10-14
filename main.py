@@ -265,10 +265,9 @@ async def login(
                             if any(g.strip().lower() == agv.strip().lower() for agv in ag):
                                 user_allowed = True
                                 break
-                    if user_allowed or (not au and not ag):
-                        # If mapping has no restrictions, allow by default
-                        if match_url:
-                            allowed_urls.append(match_url)
+                    # If user is allowed or mapping has no restrictions, and the URL is valid
+                    if (user_allowed or (not au and not ag)) and match_url:
+                        allowed_urls.append(match_url)
             except Exception:
                 logging.debug("Error computing allowed mappings; defaulting to none")
 
@@ -711,11 +710,10 @@ async def handle_request(request: Request, full_path: str = ""):
                 login_url = get_login_url(request, next_url)
                 return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
 
-            allowed_urls = payload.get('m', []) if isinstance(payload.get('m', []), list) else []
+            allowed_urls = payload.get("m", []) if isinstance(payload.get("m", []), list) else []
             if match_url not in allowed_urls:
                 logging.warning(
-                    f"Access denied: user '{payload.get('u')}' "
-                    f"not authorized for mapping '{mapping.get('match_url')}'"
+                    f"Access denied: user '{payload.get('u')}' not authorized for mapping '{mapping.get('match_url')}'"
                 )
                 raise HTTPException(status_code=403, detail="Access to this mapping is restricted")
             logging.info(
