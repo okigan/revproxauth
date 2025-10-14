@@ -267,6 +267,11 @@
         </div>
         <div class="header-right">
             {% block header_user %}{% endblock %}
+            {% if request.headers.get('cookie') and 'auth=authenticated' in request.headers.get('cookie') %}
+            <form method="get" action="/logout" style="margin:0 8px 0 0; display:inline;">
+                <button type="submit" style="background:#ff6b6b;">Logout</button>
+            </form>
+            {% endif %}
             <a href="https://github.com/sponsors/okigan" target="_blank" class="sponsor-link">
                 <span>❤️</span>
                 <span>Sponsor</span>

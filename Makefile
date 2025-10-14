@@ -4,13 +4,9 @@
 
 all: build up
 
-# Build the Docker image
-build:
-	docker-compose build
-
 # Start the service in detached mode
 up:
-	docker-compose up -d
+	docker-compose up -d --build
 
 # Stop and remove the service
 down:

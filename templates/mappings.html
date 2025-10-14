@@ -197,6 +197,8 @@
                         <th class="checkbox-cell">Disabled</th>
                         <th>Source</th>
                         <th>Destination</th>
+                        <th>Allowed Users</th>
+                        <th>Allowed Groups</th>
                         <th class="checkbox-cell">Strip Path</th>
                         <th class="order-cell">Order</th>
                         <th class="actions-cell">Actions</th>
@@ -216,10 +218,16 @@
                                 data-field="match_url" data-index="{{ loop.index0 }}"
                                 data-original="{{ mapping.get('match_url', (mapping.get('host', '') + ('/' + mapping.get('path', '') if mapping.get('path', '') else ''))) }}"
                                 onchange="markChanged(this)" {% if not is_admin %}readonly{% endif %}></td>
-                        <td><input type="text" class="editable-input" value="{{ mapping.http_dest }}"
-                                data-field="http_dest" data-index="{{ loop.index0 }}"
-                                data-original="{{ mapping.http_dest }}" onchange="markChanged(this)" {% if not is_admin
-                                %}readonly{% endif %}></td>
+            <td><input type="text" class="editable-input" value="{{ mapping.http_dest }}"
+                data-field="http_dest" data-index="{{ loop.index0 }}"
+                data-original="{{ mapping.http_dest }}" onchange="markChanged(this)" {% if not is_admin
+                %}readonly{% endif %}></td>
+            <td><input type="text" class="editable-input" value="{{ (mapping.get('allowed_users')|join(',') if mapping.get('allowed_users') else '') }}"
+                data-field="allowed_users" data-index="{{ loop.index0 }}"
+                data-original="{{ (mapping.get('allowed_users')|join(',') if mapping.get('allowed_users') else '') }}" onchange="markChanged(this)" {% if not is_admin %}readonly{% endif %}></td>
+            <td><input type="text" class="editable-input" value="{{ (mapping.get('allowed_groups')|join(',') if mapping.get('allowed_groups') else '') }}"
+                data-field="allowed_groups" data-index="{{ loop.index0 }}"
+                data-original="{{ (mapping.get('allowed_groups')|join(',') if mapping.get('allowed_groups') else '') }}" onchange="markChanged(this)" {% if not is_admin %}readonly{% endif %}></td>
                         <td class="checkbox-cell">
                             <input type="checkbox" class="strip-path-checkbox" {% if 'strip_path' in
                                 mapping.get('flags', []) %}checked{% endif %} data-index="{{ loop.index0 }}"
@@ -248,7 +256,7 @@
                         </td>
                     </tr>
                     {% endfor %}
-                    {% if is_admin %}
+                        {% if is_admin %}
                     <tr class="new-row">
                         <td class="checkbox-cell">
                             <input type="checkbox" id="new-disabled">
@@ -257,6 +265,8 @@
                                 placeholder="app.domain.com/path"></td>
                         <td><input type="text" class="editable-input" id="new-http_dest"
                                 placeholder="http://localhost:8080"></td>
+                        <td><input type="text" class="editable-input" id="new-allowed_users" placeholder="user1,user2"></td>
+                        <td><input type="text" class="editable-input" id="new-allowed_groups" placeholder="group1,group2"></td>
                         <td class="checkbox-cell">
                             <input type="checkbox" id="new-strip_path">
                         </td>
@@ -339,6 +349,12 @@
                 data[field] = input.value;
             });
 
+            // read allowed fields if present
+            const allowedUsersInput = row.querySelector('input[data-field="allowed_users"]');
+            const allowedGroupsInput = row.querySelector('input[data-field="allowed_groups"]');
+            if (allowedUsersInput) data['allowed_users'] = allowedUsersInput.value;
+            if (allowedGroupsInput) data['allowed_groups'] = allowedGroupsInput.value;
+
             // Build flags array
             const flags = [];
             if (stripPathCheckbox && stripPathCheckbox.checked) {
@@ -368,6 +384,8 @@
         function addMapping() {
             const match_url = document.getElementById('new-match_url').value;
             const http_dest = document.getElementById('new-http_dest').value;
+            const allowed_users = document.getElementById('new-allowed_users') ? document.getElementById('new-allowed_users').value : '';
+            const allowed_groups = document.getElementById('new-allowed_groups') ? document.getElementById('new-allowed_groups').value : '';
             const strip_path = document.getElementById('new-strip_path').checked;
             const disabled = document.getElementById('new-disabled').checked;
 
@@ -385,7 +403,7 @@
             form.method = 'POST';
             form.action = '/synauthproxy/add';
 
-            const fields = { match_url, http_dest, flags: flags.join(',') };
+            const fields = { match_url, http_dest, flags: flags.join(','), allowed_users: allowed_users, allowed_groups: allowed_groups };
             for (const [key, value] of Object.entries(fields)) {
                 const input = document.createElement('input');
                 input.type = 'hidden';

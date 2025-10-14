@@ -5,6 +5,8 @@ import sys
 from typing import Any
 
 import httpx
+import jwt
+import time
 from fastapi import FastAPI, Form, HTTPException, Request, status
 from fastapi.responses import (
     FileResponse,
@@ -46,6 +48,11 @@ ADMIN_USERS = (
     if os.getenv("SYNAUTHPROXY_ADMIN_USERS")
     else []
 )
+
+# JWT / session config
+SESSION_SECRET = os.getenv("SESSION_SECRET", RADIUS_SECRET)
+AUTHZ_COOKIE_NAME = "authz"
+AUTHZ_TTL = int(os.getenv("AUTHZ_TTL", "3600"))
 
 # Validate required environment variables
 missing_vars = []
@@ -223,6 +230,63 @@ async def login(
                 secure=False,
                 max_age=3600,
             )
+            # Best-effort: extract group-like attributes from the RADIUS reply
+            # and compute which mappings the user is allowed to access. We do
+            # NOT store raw groups on the client. Instead we create a signed
+            # JWT containing allowed mapping indices and expiry (stateless).
+            groups = []
+            try:
+                for attr in ("Filter-Id", "Group", "Cisco-AVPair"):
+                    if attr in reply:
+                        val = reply[attr]
+                        if isinstance(val, (list, tuple)):
+                            for v in val:
+                                if isinstance(v, bytes):
+                                    groups.append(v.decode(errors="ignore"))
+                                else:
+                                    groups.append(str(v))
+                        else:
+                            if isinstance(val, bytes):
+                                groups.append(val.decode(errors="ignore"))
+                            else:
+                                groups.append(str(val))
+            except Exception:
+                logging.debug("Could not extract groups from RADIUS reply; continuing")
+
+            # Determine allowed mapping indices based on mapping config
+            allowed_indices: list[int] = []
+            try:
+                mappings = load_mappings()
+                for idx, mapping in enumerate(mappings):
+                    au = mapping.get("allowed_users", []) or []
+                    ag = mapping.get("allowed_groups", []) or []
+                    user_allowed = False
+                    if au and username and any(username.strip().lower() == u.strip().lower() for u in au):
+                        user_allowed = True
+                    if not user_allowed and ag and groups:
+                        for g in groups:
+                            if any(g.strip().lower() == agv.strip().lower() for agv in ag):
+                                user_allowed = True
+                                break
+                    if user_allowed or (not au and not ag):
+                        # If mapping has no restrictions, allow by default
+                        allowed_indices.append(idx)
+            except Exception:
+                logging.debug("Error computing allowed mappings; defaulting to none")
+
+            # Create stateless JWT with allowed mapping indices
+            payload = {"u": username, "m": allowed_indices, "exp": int(time.time()) + AUTHZ_TTL}
+            try:
+                token = jwt.encode(payload, SESSION_SECRET, algorithm="HS256")
+                response.set_cookie(
+                    key=AUTHZ_COOKIE_NAME,
+                    value=token,
+                    httponly=True,
+                    secure=False,
+                    max_age=AUTHZ_TTL,
+                )
+            except Exception:
+                logging.exception("Failed to create authz token")
             return response
         else:  # Access-Reject
             return templates.TemplateResponse(
@@ -304,6 +368,8 @@ async def add_mapping(
     match_url: str = Form(...),
     http_dest: str = Form(...),
     flags: str = Form(""),
+    allowed_users: str = Form(""),
+    allowed_groups: str = Form(""),
 ):
     if "auth=authenticated" not in request.headers.get("cookie", ""):
         raise HTTPException(status_code=401, detail="Authentication required")
@@ -315,10 +381,14 @@ async def add_mapping(
     mappings = load_mappings()
     # Parse flags from comma-separated string
     flags_list = [f.strip() for f in flags.split(",") if f.strip()]
+    allowed_users_list = [u.strip() for u in allowed_users.split(",") if u.strip()]
+    allowed_groups_list = [g.strip() for g in allowed_groups.split(",") if g.strip()]
     new_mapping: dict[str, Any] = {
         "match_url": match_url,
         "http_dest": http_dest,
         "flags": flags_list,
+        "allowed_users": allowed_users_list,
+        "allowed_groups": allowed_groups_list,
     }
     mappings.append(new_mapping)
     save_mappings(mappings)
@@ -332,6 +402,8 @@ async def update_mapping(
     match_url: str = Form(...),
     http_dest: str = Form(...),
     flags: str = Form(""),
+    allowed_users: str = Form(""),
+    allowed_groups: str = Form(""),
 ):
     if "auth=authenticated" not in request.headers.get("cookie", ""):
         raise HTTPException(status_code=401, detail="Authentication required")
@@ -344,10 +416,14 @@ async def update_mapping(
     if 0 <= index < len(mappings):
         # Parse flags from comma-separated string
         flags_list = [f.strip() for f in flags.split(",") if f.strip()]
+        allowed_users_list = [u.strip() for u in allowed_users.split(",") if u.strip()]
+        allowed_groups_list = [g.strip() for g in allowed_groups.split(",") if g.strip()]
         mappings[index] = {
             "match_url": match_url,
             "http_dest": http_dest,
             "flags": flags_list,
+            "allowed_users": allowed_users_list,
+            "allowed_groups": allowed_groups_list,
         }
         save_mappings(mappings)
     return RedirectResponse(url="/synauthproxy", status_code=status.HTTP_303_SEE_OTHER)
@@ -581,7 +657,7 @@ async def handle_request(request: Request, full_path: str = ""):
     logging.debug(f"Handling request: {request.method} {host_without_port}{request_path}")
 
     # Check mappings (reload on each request to pick up changes)
-    for mapping in load_mappings():
+    for idx, mapping in enumerate(load_mappings()):
         flags = mapping.get("flags", [])
 
         # Skip disabled mappings
@@ -616,6 +692,32 @@ async def handle_request(request: Request, full_path: str = ""):
                 next_url = f"/{full_path}" if full_path else "/"
                 login_url = get_login_url(request, next_url)
                 return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
+
+                # Validate the stateless authz JWT and ensure this mapping index
+                # is present in the token's allowed mapping list. If the token is
+                # missing, expired or invalid, redirect to login so the user can
+                # reauthenticate and receive a fresh token.
+                token = request.cookies.get(AUTHZ_COOKIE_NAME)
+                if not token:
+                    next_url = f"/{full_path}" if full_path else "/"
+                    login_url = get_login_url(request, next_url)
+                    return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
+
+                try:
+                    payload = jwt.decode(token, SESSION_SECRET, algorithms=["HS256"]) or {}
+                except jwt.ExpiredSignatureError:
+                    next_url = f"/{full_path}" if full_path else "/"
+                    login_url = get_login_url(request, next_url)
+                    return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
+                except jwt.InvalidTokenError:
+                    # Invalid token - force login
+                    next_url = f"/{full_path}" if full_path else "/"
+                    login_url = get_login_url(request, next_url)
+                    return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
+
+                allowed_indices = payload.get("m", []) if isinstance(payload.get("m", []), list) else []
+                if idx not in allowed_indices:
+                    raise HTTPException(status_code=403, detail="Access to this mapping is restricted")
 
             # Determine target path
             target_path = f"/{full_path}" if full_path else "/"

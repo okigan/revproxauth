@@ -11,6 +11,7 @@ dependencies = [
     "httpx",
     "websockets",
     "python-multipart",
+    "PyJWT",
 ]
 
 [build-system]

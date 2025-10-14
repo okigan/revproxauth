@@ -1,25 +1,28 @@
+# Docker Compose for local development
+# This mounts the local directory for live code changes
+
 services:
   synauthproxy:
-    image: okigan/synauthproxy:latest  # Use pre-built image from Docker Hub
-    # For local development, uncomment the build section below and comment out the image line:
-    # build:
-    #   context: .
-    #   dockerfile: Dockerfile
+    build:
+      context: .
+      dockerfile: Dockerfile
     restart: unless-stopped
     environment:
-      RADIUS_SERVER: 192.168.10.12        # Change to your RADIUS server IP
-                                           # If RADIUS is on the Docker host, use: 172.17.0.1
-      RADIUS_SECRET: auth-proxy-secret1    # Change to your RADIUS shared secret
+      RADIUS_SERVER: 192.168.10.12
+      RADIUS_SECRET: auth-proxy-secret1
       RADIUS_PORT: 1812
       RADIUS_NAS_IDENTIFIER: synauthproxy
-      LOGIN_DOMAIN: mynas.mysynology.me     # Change to your Synology DDNS domain
-      SYNAUTHPROXY_ADMIN_USERS: admin,user1 # Comma-separated admin users (optional)
+      LOGIN_DOMAIN: localhost:9000
+      SYNAUTHPROXY_ADMIN_USERS: synadmin
     ports:
       - "9000:9000"
     volumes:
-      - synauthproxy_config:/app/config    # Persistent config storage
+      - ./:/app                              # Mount source code for development
+      - ./config:/app/config                 # Mount config directory
       - /etc/localtime:/etc/localtime:ro
 
 volumes:
-  synauthproxy_config:
+  app:
+    driver: local
+  config:
     driver: local
