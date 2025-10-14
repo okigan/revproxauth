@@ -43,11 +43,7 @@ RADIUS_SECRET = os.getenv("RADIUS_SECRET")
 RADIUS_PORT = int(os.getenv("RADIUS_PORT", "1812"))
 RADIUS_NAS_IDENTIFIER = os.getenv("RADIUS_NAS_IDENTIFIER", "synauthproxy")
 LOGIN_DOMAIN = os.getenv("LOGIN_DOMAIN")
-ADMIN_USERS = (
-    os.getenv("SYNAUTHPROXY_ADMIN_USERS", "").split(",")
-    if os.getenv("SYNAUTHPROXY_ADMIN_USERS")
-    else []
-)
+ADMIN_USERS = os.getenv("SYNAUTHPROXY_ADMIN_USERS", "").split(",") if os.getenv("SYNAUTHPROXY_ADMIN_USERS") else []
 
 # JWT / session config
 SESSION_SECRET = os.getenv("SESSION_SECRET", RADIUS_SECRET)
@@ -261,11 +257,7 @@ async def login(
                     au = mapping.get("allowed_users", []) or []
                     ag = mapping.get("allowed_groups", []) or []
                     user_allowed = False
-                    if (
-                        au
-                        and username
-                        and any(username.strip().lower() == u.strip().lower() for u in au)
-                    ):
+                    if au and username and any(username.strip().lower() == u.strip().lower() for u in au):
                         user_allowed = True
                     if not user_allowed and ag and groups:
                         for g in groups:
@@ -480,11 +472,7 @@ async def proxy_request(request: Request, dest_url: str, path: str):
         return await handle_websocket_upgrade(request, dest_url, path)
 
     # Regular HTTP proxy
-    headers = {
-        k: v
-        for k, v in request.headers.items()
-        if k.lower() not in ("host", "connection", "upgrade")
-    }
+    headers = {k: v for k, v in request.headers.items() if k.lower() not in ("host", "connection", "upgrade")}
     headers["Host"] = dest_url.split("://")[1].split("/")[0]
 
     full_url = dest_url.rstrip("/") + "/" + path.lstrip("/")
@@ -496,9 +484,7 @@ async def proxy_request(request: Request, dest_url: str, path: str):
 
         # Prepare request based on method
         if request.method == "GET":
-            req = client.build_request(
-                "GET", full_url, headers=headers, params=request.query_params
-            )
+            req = client.build_request("GET", full_url, headers=headers, params=request.query_params)
         elif request.method == "POST":
             body = await request.body()
             req = client.build_request(
@@ -629,9 +615,7 @@ async def handle_websocket_upgrade(request: Request, dest_url: str, path: str):
                         logging.error(f"Backend to client error: {str(e)}")
 
                 # Run both tasks concurrently
-                await asyncio.gather(
-                    client_to_backend(), backend_to_client(), return_exceptions=True
-                )
+                await asyncio.gather(client_to_backend(), backend_to_client(), return_exceptions=True)
 
         except Exception as e:
             logging.error(f"WebSocket upgrade error for {ws_url}: {type(e).__name__}: {str(e)}")
@@ -660,7 +644,9 @@ async def handle_request(request: Request, full_path: str = ""):
     host_without_port = host_header.split(":")(0) if ":" in host_header else host_header
     request_path = f"/{full_path}".rstrip("/") if full_path else "/"
     username = get_username_from_cookie(request)
-    logging.info(f"Access attempt: {request.method} {host_without_port}{request_path} by user '{username or 'anonymous'}'")
+    logging.info(
+        f"Access attempt: {request.method} {host_without_port}{request_path} by user '{username or 'anonymous'}'"
+    )
 
     # Check mappings (reload on each request to pick up changes)
     for idx, mapping in enumerate(load_mappings()):
@@ -710,26 +696,24 @@ async def handle_request(request: Request, full_path: str = ""):
                 return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
 
             try:
-                try:
                 payload = jwt.decode(token, SESSION_SECRET, algorithms=["HS256"]) or {}
                 logging.debug(f"JWT payload for user '{payload.get('u')}': allowed mappings {payload.get('m', [])}")
-            except jwt.ExpiredSignatureError:
-                logging.debug(f"JWT payload for user '{payload.get('u')}': allowed mappings {payload.get('m', [])}")
-            except jwt.ExpiredSignatureError:
-                next_url = f"/{full_path}" if full_path else "/"
-                login_url = get_login_url(request, next_url)
-                return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
-            except jwt.InvalidTokenError:
-                # Invalid token - force login
+            except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
+                # Token is either expired or invalid - force login
                 next_url = f"/{full_path}" if full_path else "/"
                 login_url = get_login_url(request, next_url)
                 return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
 
             allowed_indices = payload.get("m", []) if isinstance(payload.get("m", []), list) else []
             if idx not in allowed_indices:
-                logging.warning(f"Access denied: user '{payload.get('u')}' not authorized for mapping {idx} ({mapping.get('match_url')})")
+                logging.warning(
+                    f"Access denied: user '{payload.get('u')}' "
+                    f"not authorized for mapping {idx} ({mapping.get('match_url')})"
+                )
                 raise HTTPException(status_code=403, detail="Access to this mapping is restricted")
-            logging.info(f"Access granted: user '{payload.get('u')}' authorized for mapping {idx} ({mapping.get('match_url')})")
+            logging.info(
+                f"Access granted: user '{payload.get('u')}' authorized for mapping {idx} ({mapping.get('match_url')})"
+            )
 
             # Determine target path
             target_path = f"/{full_path}" if full_path else "/"
