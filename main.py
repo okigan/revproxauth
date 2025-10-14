@@ -677,6 +677,11 @@ async def handle_request(request: Request, full_path: str = ""):
         host_matches = (not host) or (host == host_without_port)
         path_matches = (not path) or request_path.startswith(f"/{path}")
 
+        logging.info(
+            f"Checking mapping {idx} ({match_url}): host_match={host_matches} ({host_without_port}={host}), "
+            f"path_match={path_matches} (request={request_path}, pattern=/{path})"
+        )
+
         if host_matches and path_matches:
             # Check authentication
             if "auth=authenticated" not in request.headers.get("cookie", ""):
