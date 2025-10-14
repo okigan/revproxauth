@@ -249,13 +249,14 @@ async def login(
             except Exception:
                 logging.debug("Could not extract groups from RADIUS reply; continuing")
 
-            # Determine allowed mapping indices based on mapping config
-            allowed_indices: list[int] = []
+            # Determine allowed mapping URLs based on mapping config
+            allowed_urls: list[str] = []
             try:
                 mappings = load_mappings()
-                for idx, mapping in enumerate(mappings):
+                for mapping in mappings:
                     au = mapping.get("allowed_users", []) or []
                     ag = mapping.get("allowed_groups", []) or []
+                    match_url = mapping.get("match_url", "")
                     user_allowed = False
                     if au and username and any(username.strip().lower() == u.strip().lower() for u in au):
                         user_allowed = True
@@ -266,13 +267,14 @@ async def login(
                                 break
                     if user_allowed or (not au and not ag):
                         # If mapping has no restrictions, allow by default
-                        allowed_indices.append(idx)
+                        if match_url:
+                            allowed_urls.append(match_url)
             except Exception:
                 logging.debug("Error computing allowed mappings; defaulting to none")
 
-            # Create stateless JWT with allowed mapping indices
-            payload = {"u": username, "m": allowed_indices, "exp": int(time.time()) + AUTHZ_TTL}
-            logging.info(f"User '{username}' logged in successfully. Allowed mappings: {allowed_indices}")
+            # Create stateless JWT with allowed mapping URLs
+            payload = {"u": username, "m": allowed_urls, "exp": int(time.time()) + AUTHZ_TTL}
+            logging.info(f"User '{username}' logged in successfully. Allowed mappings: {allowed_urls}")
             try:
                 token = jwt.encode(payload, SESSION_SECRET, algorithm="HS256")
                 response.set_cookie(
@@ -709,11 +711,11 @@ async def handle_request(request: Request, full_path: str = ""):
                 login_url = get_login_url(request, next_url)
                 return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
 
-            allowed_indices = payload.get("m", []) if isinstance(payload.get("m", []), list) else []
-            if idx not in allowed_indices:
+            allowed_urls = payload.get('m', []) if isinstance(payload.get('m', []), list) else []
+            if match_url not in allowed_urls:
                 logging.warning(
                     f"Access denied: user '{payload.get('u')}' "
-                    f"not authorized for mapping {idx} ({mapping.get('match_url')})"
+                    f"not authorized for mapping '{mapping.get('match_url')}'"
                 )
                 raise HTTPException(status_code=403, detail="Access to this mapping is restricted")
             logging.info(
