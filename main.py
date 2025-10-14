@@ -261,7 +261,11 @@ async def login(
                     au = mapping.get("allowed_users", []) or []
                     ag = mapping.get("allowed_groups", []) or []
                     user_allowed = False
-                    if au and username and any(username.strip().lower() == u.strip().lower() for u in au):
+                    if (
+                        au
+                        and username
+                        and any(username.strip().lower() == u.strip().lower() for u in au)
+                    ):
                         user_allowed = True
                     if not user_allowed and ag and groups:
                         for g in groups:
@@ -693,31 +697,31 @@ async def handle_request(request: Request, full_path: str = ""):
                 login_url = get_login_url(request, next_url)
                 return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
 
-                # Validate the stateless authz JWT and ensure this mapping index
-                # is present in the token's allowed mapping list. If the token is
-                # missing, expired or invalid, redirect to login so the user can
-                # reauthenticate and receive a fresh token.
-                token = request.cookies.get(AUTHZ_COOKIE_NAME)
-                if not token:
-                    next_url = f"/{full_path}" if full_path else "/"
-                    login_url = get_login_url(request, next_url)
-                    return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
+            # Validate the stateless authz JWT and ensure this mapping index
+            # is present in the token's allowed mapping list. If the token is
+            # missing, expired or invalid, redirect to login so the user can
+            # reauthenticate and receive a fresh token.
+            token = request.cookies.get(AUTHZ_COOKIE_NAME)
+            if not token:
+                next_url = f"/{full_path}" if full_path else "/"
+                login_url = get_login_url(request, next_url)
+                return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
 
-                try:
-                    payload = jwt.decode(token, SESSION_SECRET, algorithms=["HS256"]) or {}
-                except jwt.ExpiredSignatureError:
-                    next_url = f"/{full_path}" if full_path else "/"
-                    login_url = get_login_url(request, next_url)
-                    return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
-                except jwt.InvalidTokenError:
-                    # Invalid token - force login
-                    next_url = f"/{full_path}" if full_path else "/"
-                    login_url = get_login_url(request, next_url)
-                    return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
+            try:
+                payload = jwt.decode(token, SESSION_SECRET, algorithms=["HS256"]) or {}
+            except jwt.ExpiredSignatureError:
+                next_url = f"/{full_path}" if full_path else "/"
+                login_url = get_login_url(request, next_url)
+                return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
+            except jwt.InvalidTokenError:
+                # Invalid token - force login
+                next_url = f"/{full_path}" if full_path else "/"
+                login_url = get_login_url(request, next_url)
+                return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
 
-                allowed_indices = payload.get("m", []) if isinstance(payload.get("m", []), list) else []
-                if idx not in allowed_indices:
-                    raise HTTPException(status_code=403, detail="Access to this mapping is restricted")
+            allowed_indices = payload.get("m", []) if isinstance(payload.get("m", []), list) else []
+            if idx not in allowed_indices:
+                raise HTTPException(status_code=403, detail="Access to this mapping is restricted")
 
             # Determine target path
             target_path = f"/{full_path}" if full_path else "/"
