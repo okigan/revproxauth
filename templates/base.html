@@ -137,6 +137,22 @@
             color: #bdc3c7;
         }
 
+        /* Logout button to match header link styles */
+        .logout-btn {
+            background: rgba(255, 105, 135, 0.15);
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 105, 135, 0.25);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 105, 135, 0.25);
+            transform: translateY(-1px);
+        }
+
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -269,7 +285,7 @@
             {% block header_user %}{% endblock %}
             {% if request.headers.get('cookie') and 'auth=authenticated' in request.headers.get('cookie') %}
             <form method="get" action="/logout" style="margin:0 8px 0 0; display:inline;">
-                <button type="submit" style="background:#ff6b6b;">Logout</button>
+                <button type="submit" class="logout-btn">Logout</button>
             </form>
             {% endif %}
             <a href="https://github.com/sponsors/okigan" target="_blank" class="sponsor-link">

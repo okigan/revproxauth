@@ -280,6 +280,7 @@ async def login(
 
             # Create stateless JWT with allowed mapping indices
             payload = {"u": username, "m": allowed_indices, "exp": int(time.time()) + AUTHZ_TTL}
+            logging.info(f"User '{username}' logged in successfully. Allowed mappings: {allowed_indices}")
             try:
                 token = jwt.encode(payload, SESSION_SECRET, algorithm="HS256")
                 response.set_cookie(
@@ -656,9 +657,10 @@ async def handle_websocket_upgrade(request: Request, dest_url: str, path: str):
 async def handle_request(request: Request, full_path: str = ""):
     host_header = request.headers.get("host", "").lower()
     # Strip port number from host header for matching
-    host_without_port = host_header.split(":")[0] if ":" in host_header else host_header
+    host_without_port = host_header.split(":")(0) if ":" in host_header else host_header
     request_path = f"/{full_path}".rstrip("/") if full_path else "/"
-    logging.debug(f"Handling request: {request.method} {host_without_port}{request_path}")
+    username = get_username_from_cookie(request)
+    logging.info(f"Access attempt: {request.method} {host_without_port}{request_path} by user '{username or 'anonymous'}'")
 
     # Check mappings (reload on each request to pick up changes)
     for idx, mapping in enumerate(load_mappings()):
@@ -708,7 +710,11 @@ async def handle_request(request: Request, full_path: str = ""):
                 return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
 
             try:
+                try:
                 payload = jwt.decode(token, SESSION_SECRET, algorithms=["HS256"]) or {}
+                logging.debug(f"JWT payload for user '{payload.get('u')}': allowed mappings {payload.get('m', [])}")
+            except jwt.ExpiredSignatureError:
+                logging.debug(f"JWT payload for user '{payload.get('u')}': allowed mappings {payload.get('m', [])}")
             except jwt.ExpiredSignatureError:
                 next_url = f"/{full_path}" if full_path else "/"
                 login_url = get_login_url(request, next_url)
@@ -721,7 +727,9 @@ async def handle_request(request: Request, full_path: str = ""):
 
             allowed_indices = payload.get("m", []) if isinstance(payload.get("m", []), list) else []
             if idx not in allowed_indices:
+                logging.warning(f"Access denied: user '{payload.get('u')}' not authorized for mapping {idx} ({mapping.get('match_url')})")
                 raise HTTPException(status_code=403, detail="Access to this mapping is restricted")
+            logging.info(f"Access granted: user '{payload.get('u')}' authorized for mapping {idx} ({mapping.get('match_url')})")
 
             # Determine target path
             target_path = f"/{full_path}" if full_path else "/"
