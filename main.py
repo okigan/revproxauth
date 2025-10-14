@@ -274,13 +274,19 @@ async def login(
                     user_allowed = False
                     if au and username and any(username.strip().lower() == u.strip().lower() for u in au):
                         user_allowed = True
-                    if not user_allowed and ag and groups:
-                        logging.debug(f"Checking if user groups {groups} match any of allowed groups {ag}")
-                        for g in groups:
-                            if any(g.strip().lower() == agv.strip().lower() for agv in ag):
-                                logging.debug(f"Found matching group: {g}")
-                                user_allowed = True
-                                break
+                    if not user_allowed and ag:
+                        if groups:
+                            logging.debug(f"Checking if user groups {groups} match any of allowed groups {ag}")
+                            for g in groups:
+                                if any(g.strip().lower() == agv.strip().lower() for agv in ag):
+                                    logging.debug(f"Found matching group: {g}")
+                                    user_allowed = True
+                                    break
+                        else:
+                            # No RADIUS groups returned but mapping specifies allowed_groups.
+                            # Treat as allowed for any authenticated user.
+                            logging.debug("No groups from RADIUS, but mapping specifies allowed_groups – treating as allowed")
+                            user_allowed = True
                     # Debug log the authorization check
                     logging.debug(f"Checking permissions for mapping {match_url}:")
                     logging.debug(f"  - Allowed users: {au}")
