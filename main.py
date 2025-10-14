@@ -285,7 +285,9 @@ async def login(
                         else:
                             # No RADIUS groups returned but mapping specifies allowed_groups.
                             # Treat as allowed for any authenticated user.
-                            logging.debug("No groups from RADIUS, but mapping specifies allowed_groups – treating as allowed")
+                            logging.debug(
+                                "No groups from RADIUS, but mapping specifies allowed_groups – treating as allowed"
+                            )
                             user_allowed = True
                     # Debug log the authorization check
                     logging.debug(f"Checking permissions for mapping {match_url}:")
