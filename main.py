@@ -642,7 +642,7 @@ async def handle_websocket_upgrade(request: Request, dest_url: str, path: str):
 async def handle_request(request: Request, full_path: str = ""):
     host_header = request.headers.get("host", "").lower()
     # Strip port number from host header for matching
-    host_without_port = host_header.split(":")(0) if ":" in host_header else host_header
+    host_without_port = host_header.split(":")[0] if ":" in host_header else host_header
     request_path = f"/{full_path}".rstrip("/") if full_path else "/"
     username = get_username_from_cookie(request)
     logging.info(
