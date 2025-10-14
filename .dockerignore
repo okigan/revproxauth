@@ -35,6 +35,7 @@ synauthproxy.log
 
 # Documentation
 doc/
+docs/
 *.md
 !README.md
 
@@ -46,3 +47,5 @@ docker-compose.yml
 Makefile
 .env
 .env.*
+
+.ruff_cache/

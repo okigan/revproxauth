@@ -17,8 +17,12 @@ services:
     ports:
       - "9000:9000"
     volumes:
-      - ./:/app                              # Mount source code for development
-      - ./config:/app/config                 # Mount config directory
+      # Mount individual files/dirs instead of entire app to preserve .venv
+      - ./main.py:/app/main.py
+      - ./dictionary:/app/dictionary
+      - ./templates:/app/templates
+      - ./static:/app/static
+      - ./config:/app/config
       - /etc/localtime:/etc/localtime:ro
 
 volumes:

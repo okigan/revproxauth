@@ -2,6 +2,8 @@
 
 Step-by-step walkthrough for Synology Container Manager
 
+> ⚠️ **Important:** Due to a bug in Synology's Container Manager, port mappings on individual containers may not work correctly. **Using Docker Compose (Container Manager Projects) is strongly recommended.** This guide shows both methods.
+
 ## 1. Install RADIUS Server
 
 First, install the RADIUS Server package from Synology Package Center. This provides authentication services for SynAuthProxy.
@@ -17,7 +19,102 @@ First, install the RADIUS Server package from Synology Package Center. This prov
 
 
 
-## 2. Open Container Manager
+## 2. Choose Installation Method
+
+**Recommended: Method A - Docker Compose (Container Manager Project)**
+
+Due to a Synology bug where port mappings don't work reliably with individual containers, we recommend using Docker Compose through Container Manager Projects.
+
+**Alternative: Method B - Individual Container (GUI)**
+
+This method may not work due to the port mapping bug. Use only if Method A is not suitable for your needs.
+
+---
+
+## Method A: Docker Compose (Recommended)
+
+### 3A. Create Project Directory
+
+Use File Station to create the project structure.
+
+1. Open **File Station**
+2. Navigate to `/docker` (create this folder if it doesn't exist)
+3. Create new folder: `synauthproxy`
+4. Inside `synauthproxy`, create folder: `config`
+
+### 4A. Create docker-compose.yml
+
+Create the Docker Compose configuration file.
+
+1. Inside `/docker/synauthproxy`, create a new file named `docker-compose.yml`
+2. Copy the following content and **replace all EXAMPLE values**:
+
+```yaml
+services:
+  synauthproxy:
+    image: okigan/synauthproxy:latest
+    container_name: synauthproxy
+    ports:
+      - "9000:9000"
+    environment:
+      # REQUIRED: Replace these example values with your actual configuration
+      - RADIUS_SERVER=172.17.0.1              # EXAMPLE: Docker bridge gateway IP (use if RADIUS is on same NAS)
+                                               # OR use your actual RADIUS server IP (e.g., 192.168.1.100)
+      - RADIUS_SECRET=change-me-secret        # EXAMPLE: Replace with your actual RADIUS shared secret
+      - LOGIN_DOMAIN=app.example.com          # EXAMPLE: Replace with your actual domain (e.g., app.mysynology.me)
+      
+      # OPTIONAL: Adjust these if needed
+      - RADIUS_PORT=1812                      # Default RADIUS port (usually no change needed)
+      - RADIUS_NAS_IDENTIFIER=synauthproxy    # NAS identifier (usually no change needed)
+      - SYNAUTHPROXY_ADMIN_USERS=admin        # EXAMPLE: Comma-separated admin usernames (e.g., admin,john)
+                                               # Leave empty to allow all users to edit mappings
+      
+      # OPTIONAL: Logging configuration
+      - LOG_LEVEL=INFO                        # Use DEBUG for troubleshooting, INFO for production
+      - NO_COLOR=1                            # Cleaner logs without color codes
+      - UV_NO_PROGRESS=1                      # Suppress progress bars in logs
+    restart: unless-stopped
+    volumes:
+      - /volume1/docker/synauthproxy/config:/app/config  # Persistent config storage
+                                                          # Adjust /volume1 to your volume name if different
+```
+
+### 5A. Create Project in Container Manager
+
+Set up the project in Container Manager.
+
+1. Open **Container Manager**
+2. Go to **Project** tab
+3. Click **Create**
+4. Project Name: `synauthproxy`
+5. Path: Browse and select `/docker/synauthproxy`
+6. Source: `Use existing docker-compose.yml`
+7. Click **Next** to review settings
+8. Click **Done**
+
+### 6A. Start the Project
+
+Launch your SynAuthProxy project.
+
+1. In the **Project** tab, select `synauthproxy`
+2. Click **Build** (first time only)
+3. Click **Start**
+4. Check logs by clicking on the project → **Action** → **View Logs**
+5. You should see: `SynAuthProxy Starting` with your configuration
+
+Container is now running on `http://YOUR-NAS-IP:9000`
+
+**Skip to Step 9** (Configure Reverse Proxy) if using Method A.
+
+---
+
+## Method B: Individual Container (Alternative)
+
+> ⚠️ **Warning:** This method may not work due to Synology's port mapping bug. If port 9000 is not accessible after setup, use Method A instead.
+
+### 2B. Open Container Manager
+
+### 2B. Open Container Manager
 
 Navigate to Container Manager (Docker) on your Synology NAS. If you don't have it installed, get it from Package Center first.
 
@@ -26,7 +123,9 @@ Navigate to Container Manager (Docker) on your Synology NAS. If you don't have i
 
 
 
-## 3. Download SynAuthProxy Image
+## 3B. Download SynAuthProxy Image
+
+## 3B. Download SynAuthProxy Image
 
 Pull the official SynAuthProxy image from Docker Hub.
 
@@ -37,7 +136,9 @@ Pull the official SynAuthProxy image from Docker Hub.
 
 
 
-## 4. Launch Container
+## 4B. Launch Container
+
+## 4B. Launch Container
 
 Create a new container from the downloaded image.
 
@@ -49,9 +150,13 @@ Create a new container from the downloaded image.
 
 
 
-## 5. Configure Port Mapping
+## 5B. Configure Port Mapping
+
+## 5B. Configure Port Mapping
 
 Map the container port to your host so you can access the web interface.
+
+> ⚠️ **Note:** This step may not work due to Synology's bug. If port 9000 is not accessible, use Method A instead.
 
 1. In Advanced Settings, go to **Port Settings** tab
 2. Click **+ Add**
@@ -61,7 +166,9 @@ Map the container port to your host so you can access the web interface.
 
 
 
-## 6. Configure Volume for Persistent Storage
+## 6B. Configure Volume for Persistent Storage
+
+## 6B. Configure Volume for Persistent Storage
 
 Mount a volume to persist your configuration across container restarts.
 
@@ -72,19 +179,33 @@ Mount a volume to persist your configuration across container restarts.
 
 
 
-## 7. Set Environment Variables
+## 7B. Set Environment Variables
 
-Configure the essential settings. The container will show these variables - you just need to fill in the values!
+## 7B. Set Environment Variables
 
-* RADIUS_SERVER=172.17.0.1   # Docker host IP (use if RADIUS is on same NAS)
-* RADIUS_SECRET=your-secret-here   # From RADIUS Server configuration
-* RADIUS_PORT=1812   # Default RADIUS port
-* LOGIN_DOMAIN=https://nas.example.com:9000   # Your full domain URL with protocol
-* SYNAUTHPROXY_ADMIN_USERS=admin   # Optional: comma-separated admin usernames
+Configure the essential settings. **Replace all EXAMPLE values with your actual configuration!**
+
+1. Go to **Environment** tab
+2. Click **+ Add** for each variable:
+
+**Required Variables (REPLACE EXAMPLES):**
+* RADIUS_SERVER=172.17.0.1   # EXAMPLE: Docker bridge gateway (use if RADIUS on same NAS) OR your actual RADIUS server IP
+* RADIUS_SECRET=change-me-secret   # EXAMPLE: Replace with your actual RADIUS shared secret
+* LOGIN_DOMAIN=app.example.com   # EXAMPLE: Replace with your actual domain (e.g., app.mysynology.me)
+
+**Optional Variables:**
+* RADIUS_PORT=1812   # Default RADIUS port (usually no change needed)
+* RADIUS_NAS_IDENTIFIER=synauthproxy   # NAS identifier (usually no change needed)
+* SYNAUTHPROXY_ADMIN_USERS=admin   # EXAMPLE: Comma-separated admin usernames (e.g., admin,john) - leave empty for all users
+* LOG_LEVEL=INFO   # Use DEBUG for troubleshooting
+* NO_COLOR=1   # Cleaner logs
+* UV_NO_PROGRESS=1   # Suppress progress bars
 
 
 
-## 8. Start Container
+## 8B. Start Container
+
+## 8B. Start Container
 
 Review your settings and launch the container!
 
@@ -93,9 +214,11 @@ Review your settings and launch the container!
 3. Check logs to verify it started successfully
 4. You should see: `SynAuthProxy Starting` with your configuration
 
-Container is now running on `http://YOUR-NAS-IP:9000`
+> ⚠️ **If port 9000 is not accessible:** The port mapping bug has occurred. Stop this container and use Method A (Docker Compose) instead.
 
+Container should now be running on `http://YOUR-NAS-IP:9000`
 
+---
 
 ## 9. Configure Reverse Proxy
 

@@ -1,5 +1,28 @@
 # check=skip=SecretsUsedInArgOrEnv
-FROM python:3.12-slim
+# Build stage
+FROM python:3.12-alpine AS builder
+
+WORKDIR /app
+
+# Set UV to use copy mode to avoid hardlink warnings in Docker
+ENV UV_LINK_MODE=copy
+
+# Install uv
+RUN pip install --no-cache-dir uv
+
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+
+# Install dependencies with uv - it should download musl-compatible wheels
+RUN uv sync --frozen --no-dev && \
+    # Remove unnecessary files to reduce image size
+    find /app/.venv -type d -name "tests" -o -name "test" | xargs rm -rf && \
+    find /app/.venv -type f -name "*.pyc" -delete && \
+    find /app/.venv -type d -name "__pycache__" -delete && \
+    find /app/.venv -name "*.dist-info" -type d -exec sh -c 'rm -f "$1"/{RECORD,INSTALLER,direct_url.json}' _ {} \;
+
+# Runtime stage
+FROM python:3.12-alpine
 
 # Metadata labels for container discovery
 LABEL org.opencontainers.image.title="SynAuthProxy"
@@ -27,18 +50,15 @@ ENV RADIUS_SERVER="" \
     SYNAUTHPROXY_ADMIN_USERS="" \
     LOG_LEVEL="INFO" \
     NO_COLOR="1" \
-    UV_NO_PROGRESS="1"
+    PYTHONUNBUFFERED="1" \
+    VIRTUAL_ENV="/app/.venv" \
+    PATH="/app/.venv/bin:$PATH" \
+    PYTHONPATH="/app/.venv/lib/python3.12/site-packages"
 
 WORKDIR /app
 
-# Install uv
-RUN pip install --no-cache-dir uv
-
-# Copy pyproject.toml and uv.lock
-COPY pyproject.toml uv.lock ./
-
-# Install dependencies with uv
-RUN uv sync --frozen
+# Copy virtual environment from builder
+COPY --from=builder /app/.venv /app/.venv
 
 # Copy application code and templates
 COPY main.py dictionary ./
@@ -48,10 +68,8 @@ COPY config/ ./config/
 
 # Capture Git commit hash as build arg and store in file
 ARG GIT_COMMIT=unknown
-RUN echo "${GIT_COMMIT}" > /app/git_commit.txt
-
-# Create config directory and initialize with empty config if needed
-RUN mkdir -p /app/config && \
+RUN echo "${GIT_COMMIT}" > /app/git_commit.txt && \
+    mkdir -p /app/config && \
     if [ ! -f /app/config/synauthproxy.json ]; then \
         echo '{"version":"1.0","mappings":[]}' > /app/config/synauthproxy.json; \
     fi
@@ -59,5 +77,5 @@ RUN mkdir -p /app/config && \
 # Expose port
 EXPOSE 9000
 
-# Run FastAPI with uvicorn (no colors for cleaner Synology logs)
-CMD ["uv", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9000"]
+# Activate venv and run uvicorn directly (no uv needed)
+CMD ["/app/.venv/bin/python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9000"]
