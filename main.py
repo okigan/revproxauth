@@ -208,6 +208,9 @@ async def login(
         logging.debug(f"Sending RADIUS packet to {RADIUS_SERVER}:{RADIUS_PORT}")
         reply = client.SendPacket(req)
         logging.debug(f"Received RADIUS reply with code: {reply.code}")
+        logging.debug("RADIUS reply attributes:")
+        for attr_name, values in reply.items():
+            logging.debug(f"  {attr_name}: {values}")
 
         if reply.code == 2:  # Access-Accept
             response = RedirectResponse(url=next, status_code=status.HTTP_303_SEE_OTHER)
@@ -248,25 +251,39 @@ async def login(
                                 groups.append(str(val))
             except Exception:
                 logging.debug("Could not extract groups from RADIUS reply; continuing")
+            logging.debug(f"Extracted groups from RADIUS reply: {groups}")
 
             # Determine allowed mapping URLs based on mapping config
             allowed_urls: list[str] = []
             try:
                 mappings = load_mappings()
                 for mapping in mappings:
-                    au = mapping.get("allowed_users", []) or []
-                    ag = mapping.get("allowed_groups", []) or []
+                    # Handle empty lists properly
+                    au = mapping.get("allowed_users", None) or []
+                    ag = mapping.get("allowed_groups", None) or []
+                    logging.debug(f"Raw allowed_users: {mapping.get('allowed_users')}, processed: {au}")
+                    logging.debug(f"Raw allowed_groups: {mapping.get('allowed_groups')}, processed: {ag}")
                     match_url = mapping.get("match_url", "")
                     user_allowed = False
                     if au and username and any(username.strip().lower() == u.strip().lower() for u in au):
                         user_allowed = True
                     if not user_allowed and ag and groups:
+                        logging.debug(f"Checking if user groups {groups} match any of allowed groups {ag}")
                         for g in groups:
                             if any(g.strip().lower() == agv.strip().lower() for agv in ag):
+                                logging.debug(f"Found matching group: {g}")
                                 user_allowed = True
                                 break
+                    # Debug log the authorization check
+                    logging.debug(f"Checking permissions for mapping {match_url}:")
+                    logging.debug(f"  - Allowed users: {au}")
+                    logging.debug(f"  - Allowed groups: {ag}")
+                    logging.debug(f"  - User allowed by username: {user_allowed}")
+                    logging.debug(f"  - No restrictions: {not au and not ag}")
+                    
                     # If user is allowed or mapping has no restrictions, and the URL is valid
                     if (user_allowed or (not au and not ag)) and match_url:
+                        logging.debug(f"  => Adding {match_url} to allowed URLs")
                         allowed_urls.append(match_url)
             except Exception:
                 logging.debug("Error computing allowed mappings; defaulting to none")
