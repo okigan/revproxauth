@@ -13,7 +13,7 @@ RUN pip install --no-cache-dir uv
 # Copy dependency files
 COPY pyproject.toml uv.lock ./
 
-# Install dependencies with uv - it should download musl-compatible wheels
+# Install dependencies with uv - exclude dev dependencies
 RUN uv sync --frozen --no-dev && \
     # Remove unnecessary files to reduce image size
     find /app/.venv -type d -name "tests" -o -name "test" | xargs rm -rf && \
@@ -77,5 +77,15 @@ RUN echo "${GIT_COMMIT}" > /app/git_commit.txt && \
 # Expose port
 EXPOSE 9000
 
-# Activate venv and run uvicorn directly (no uv needed)
-CMD ["/app/.venv/bin/python", "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9000"]
+# Optimize Python for lower memory usage
+ENV PYTHONOPTIMIZE=2 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# Run uvicorn with optimized settings for lower memory usage
+CMD ["/app/.venv/bin/python", "-m", "uvicorn", "main:app", \
+     "--host", "0.0.0.0", \
+     "--port", "9000", \
+     "--workers", "1", \
+     "--limit-concurrency", "100", \
+     "--backlog", "50", \
+     "--timeout-keep-alive", "5"]
