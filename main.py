@@ -172,12 +172,19 @@ def save_mappings(mappings):
         raise HTTPException(status_code=500, detail=f"Failed to save mappings: {str(e)}") from None
 
 
-def record_metrics(mapping_url: str, username: str, bytes_sent: int, bytes_received: int):
-    """Record metrics for a request."""
+def update_metrics(
+    mapping_url: str,
+    username: str,
+    bytes_sent: int = 0,
+    bytes_received: int = 0,
+    increment_request: bool = False,
+):
+    """Update metrics incrementally. Can update bytes and/or increment request count."""
     with metrics_lock:
         key = (mapping_url, username)
         metrics = metrics_storage[key]
-        metrics["requests"] += 1
+        if increment_request:
+            metrics["requests"] += 1
         metrics["bytes_sent"] += bytes_sent
         metrics["bytes_received"] += bytes_received
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -656,29 +663,51 @@ async def proxy_request(request: Request, dest_url: str, path: str, mapping_url:
         content_type = (resp.headers.get("content-type") or "").lower()
         is_sse = "text/event-stream" in content_type
 
-        # Track bytes received
+        # Track bytes received and batch threshold for incremental updates
         bytes_received = 0
+        bytes_since_last_update = 0
+        update_batch_size = 1024 * 100  # Update metrics every 100KB to reduce lock contention
+
+        # Initialize request metrics (count request + initial bytes sent)
+        if mapping_url and username:
+            update_metrics(mapping_url, username, bytes_sent=body_bytes, increment_request=True)
 
         async def generate():
-            nonlocal bytes_received
+            nonlocal bytes_received, bytes_since_last_update
             try:
                 if is_sse:
                     # aiter_lines yields text without newline; re-add newline and
                     # encode to bytes for StreamingResponse.
                     async for line in resp.aiter_lines():
                         chunk = (line + "\n").encode("utf-8")
-                        bytes_received += len(chunk)
+                        chunk_size = len(chunk)
+                        bytes_received += chunk_size
+                        bytes_since_last_update += chunk_size
+
+                        # Update metrics incrementally when batch threshold reached
+                        if mapping_url and username and bytes_since_last_update >= update_batch_size:
+                            update_metrics(mapping_url, username, bytes_received=bytes_since_last_update)
+                            bytes_since_last_update = 0
+
                         yield chunk
                 else:
                     async for chunk in resp.aiter_bytes(chunk_size=8192):
-                        bytes_received += len(chunk)
+                        chunk_size = len(chunk)
+                        bytes_received += chunk_size
+                        bytes_since_last_update += chunk_size
+
+                        # Update metrics incrementally when batch threshold reached
+                        if mapping_url and username and bytes_since_last_update >= update_batch_size:
+                            update_metrics(mapping_url, username, bytes_received=bytes_since_last_update)
+                            bytes_since_last_update = 0
+
                         yield chunk
             finally:
                 await resp.aclose()
                 await client.aclose()
-                # Record metrics after response is complete
-                if mapping_url and username:
-                    record_metrics(mapping_url, username, body_bytes, bytes_received)
+                # Record any remaining bytes not yet recorded
+                if mapping_url and username and bytes_since_last_update > 0:
+                    update_metrics(mapping_url, username, bytes_received=bytes_since_last_update)
 
         return StreamingResponse(
             generate(),

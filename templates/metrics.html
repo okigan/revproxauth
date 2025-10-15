@@ -109,6 +109,59 @@
         background: #f7f9fc;
         border-radius: 3px;
         border-left: 3px solid #0084d6;
+        text-align: center;
+    }
+
+    .refresh-controls {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+        padding: 16px;
+        background: white;
+        border-radius: 3px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #d7dce5;
+    }
+
+    .refresh-label {
+        font-size: 13px;
+        color: #555;
+        font-weight: 600;
+    }
+
+    .refresh-btn {
+        padding: 8px 16px;
+        background: #f7f7f7;
+        color: #333;
+        border: 1px solid #d7dce5;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        transition: all 0.15s ease;
+    }
+
+    .refresh-btn:hover {
+        background: #e8e8e8;
+        border-color: #b8c0cc;
+    }
+
+    .refresh-btn.active {
+        background: #0084d6;
+        color: white;
+        border-color: #0084d6;
+    }
+
+    .refresh-btn.active:hover {
+        background: #0077c2;
+    }
+
+    .refresh-status {
+        font-size: 12px;
+        color: #888;
+        margin-left: 8px;
     }
 
     .no-data {
@@ -143,6 +196,16 @@
     <div class="container">
         <div class="info-text">
             📊 Usage metrics are tracked per mapping per user. Data is collected in-memory and resets on application restart.
+        </div>
+
+        <div class="refresh-controls">
+            <span class="refresh-label">Auto-refresh:</span>
+            <button class="refresh-btn" data-interval="0" onclick="setRefreshInterval(0)">Off</button>
+            <button class="refresh-btn" data-interval="1" onclick="setRefreshInterval(1)">1s</button>
+            <button class="refresh-btn" data-interval="10" onclick="setRefreshInterval(10)">10s</button>
+            <button class="refresh-btn" data-interval="30" onclick="setRefreshInterval(30)">30s</button>
+            <button class="refresh-btn" data-interval="60" onclick="setRefreshInterval(60)">60s</button>
+            <span class="refresh-status" id="refresh-status"></span>
         </div>
 
         {% if total_requests > 0 %}
@@ -204,4 +267,63 @@
         </div>
         {% endif %}
     </div>
+{% endblock %}
+
+{% block page_scripts %}
+    let refreshIntervalId = null;
+    let currentInterval = 0;
+    let countdown = 0;
+
+    function setRefreshInterval(seconds) {
+        // Clear existing interval
+        if (refreshIntervalId) {
+            clearInterval(refreshIntervalId);
+            refreshIntervalId = null;
+        }
+
+        // Update button states
+        document.querySelectorAll('.refresh-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-interval="${seconds}"]`).classList.add('active');
+
+        currentInterval = seconds;
+        countdown = seconds;
+
+        if (seconds > 0) {
+            // Set new interval
+            refreshIntervalId = setInterval(() => {
+                countdown--;
+                if (countdown <= 0) {
+                    window.location.reload();
+                } else {
+                    updateRefreshStatus();
+                }
+            }, 1000);
+            updateRefreshStatus();
+        } else {
+            document.getElementById('refresh-status').textContent = '';
+        }
+
+        // Save preference to localStorage
+        localStorage.setItem('metricsRefreshInterval', seconds);
+    }
+
+    function updateRefreshStatus() {
+        const status = document.getElementById('refresh-status');
+        if (countdown > 0) {
+            status.textContent = `Refreshing in ${countdown}s`;
+        }
+    }
+
+    // Restore saved preference on load
+    document.addEventListener('DOMContentLoaded', function() {
+        const savedInterval = localStorage.getItem('metricsRefreshInterval');
+        if (savedInterval !== null) {
+            setRefreshInterval(parseInt(savedInterval));
+        } else {
+            // Default to Off
+            setRefreshInterval(0);
+        }
+    });
 {% endblock %}
