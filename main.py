@@ -21,6 +21,10 @@ from pydantic import BaseModel
 from pyrad.client import Client
 from pyrad.dictionary import Dictionary
 
+# Application branding
+APP_NAME = "RevProxAuth"
+APP_TAGLINE = "Dynamic reverse proxy with RADIUS-based authentication"
+
 app = FastAPI(
     # root_path="/synauthproxy"
 )
@@ -99,9 +103,9 @@ try:
 except Exception:
     pass
 
-startup_msg = f"""
+startup_banner = f"""
 ================================================================================
-SynAuthProxy Starting
+{APP_NAME} Starting
 ================================================================================
 Git Commit:    {git_commit}
 RADIUS Server: {RADIUS_SERVER}:{RADIUS_PORT}
@@ -111,7 +115,7 @@ Local IP:      {local_ip}
 Admin Users:   {", ".join(ADMIN_USERS) if ADMIN_USERS else "(all authenticated users)"}
 ================================================================================
 """
-print(startup_msg, flush=True)
+print(startup_banner, flush=True)
 
 # Initialize RADIUS client and dictionary
 radius_dict = Dictionary("/app/dictionary")
@@ -186,7 +190,13 @@ def get_login_url(request: Request, next_path: str):
 async def login_page(request: Request, next: str = "/"):
     return templates.TemplateResponse(
         "login.html",
-        {"request": request, "next": next, "unrestricted_access": not ADMIN_USERS},
+        {
+            "request": request,
+            "next": next,
+            "unrestricted_access": not ADMIN_USERS,
+            "app_name": APP_NAME,
+            "app_tagline": APP_TAGLINE,
+        },
     )
 
 
@@ -388,6 +398,8 @@ async def mappings_page(request: Request):
             "is_admin": is_admin,
             "username": username,
             "unrestricted_access": not ADMIN_USERS,
+            "app_name": APP_NAME,
+            "app_tagline": APP_TAGLINE,
         },
     )
 

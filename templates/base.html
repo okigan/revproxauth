@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{% block title %}Synology Authentication Proxy{% endblock %}</title>
+    <title>{% block title %}{{ app_name|default('RevProxAuth') }}{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.ico">
     <style>
         * {
@@ -71,7 +71,7 @@
             align-items: center;
             gap: 8px;
             background: rgba(255, 255, 255, 0.1);
-            padding: 8px 16px;
+            padding: 10px 16px;
             border-radius: 6px;
             text-decoration: none;
             color: #ffffff;
@@ -79,6 +79,8 @@
             font-weight: 500;
             transition: all 0.2s ease;
             border: 1px solid rgba(255, 255, 255, 0.15);
+            height: 40px;
+            box-sizing: border-box;
         }
 
         .github-link:hover,
@@ -117,12 +119,14 @@
             align-items: center;
             gap: 8px;
             background: rgba(255, 255, 255, 0.1);
-            padding: 8px 16px;
+            padding: 10px 16px;
             border-radius: 6px;
             color: #ffffff;
             font-size: 14px;
             font-weight: 500;
             border: 1px solid rgba(255, 255, 255, 0.15);
+            height: 40px;
+            box-sizing: border-box;
         }
 
         .user-badge .username {
@@ -141,11 +145,13 @@
         .logout-btn {
             background: rgba(255, 105, 135, 0.15);
             color: #fff;
-            padding: 8px 14px;
+            padding: 10px 16px;
             border-radius: 6px;
             border: 1px solid rgba(255, 105, 135, 0.25);
             font-size: 14px;
             font-weight: 500;
+            height: 40px;
+            box-sizing: border-box;
         }
 
         .logout-btn:hover {
@@ -277,8 +283,8 @@
         <div class="header-left">
             <div class="header-icon">🔐</div>
             <div class="header-title">
-                <h1>SynAuthProxy</h1>
-                <p>Authenticating proxy for Synology NAS</p>
+                <h1>{{ app_name|default('RevProxAuth') }}</h1>
+                <p>{{ app_tagline|default('Dynamic reverse proxy with RADIUS-based authentication') }}</p>
             </div>
         </div>
         <div class="header-right">

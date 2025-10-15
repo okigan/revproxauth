@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Synology Authentication Proxy Mappings{% endblock %}
+{% block title %}{{ app_name|default('RevProxAuth') }} Mappings{% endblock %}
 
 {% block additional_styles %}
     .table-container {
@@ -134,12 +134,24 @@
     }
 
     .actions-cell {
-        width: 200px;
+        width: 120px;
     }
 
     .checkbox-cell {
         width: 80px;
         text-align: center;
+    }
+
+    .source-cell {
+        min-width: 220px;
+        max-width: 400px;
+        width: 25%;
+    }
+
+    .dest-cell {
+        min-width: 220px;
+        max-width: 400px;
+        width: 25%;
     }
 
     input[type="checkbox"] {
@@ -186,7 +198,7 @@
         {% endif %}
         {% if username and not is_admin %}
         <p
-            style="color: #d84b4b; margin-bottom: 20px; padding: 12px; background: #fee; border-radius: 3px; border: 1px solid #fcc;">
+            style="color: #d84b4b; margin-bottom: 20px; padding: 12px; background: #fee; border-radius: 3px; border: 1px solid #fcc; text-align: center;">
             ⚠️ You are viewing in read-only mode. Contact an administrator to modify mappings.
         </p>
         {% endif %}
@@ -195,8 +207,8 @@
                 <thead>
                     <tr>
                         <th class="checkbox-cell">Disabled</th>
-                        <th>Source</th>
-                        <th>Destination</th>
+                        <th class="source-cell">Source</th>
+                        <th class="dest-cell">Destination</th>
                         <th>Allowed Users</th>
                         <th>Allowed Groups</th>
                         <th class="checkbox-cell">Strip Path</th>
@@ -213,12 +225,12 @@
                                 []) %}checked{% endif %} data-index="{{ loop.index0 }}" onchange="toggleDisabled(this)"
                                 {% if not is_admin %}disabled{% endif %}>
                         </td>
-                        <td><input type="text" class="editable-input"
+                        <td class="source-cell"><input type="text" class="editable-input"
                                 value="{{ mapping.get('match_url', (mapping.get('host', '') + ('/' + mapping.get('path', '') if mapping.get('path', '') else ''))) }}"
                                 data-field="match_url" data-index="{{ loop.index0 }}"
                                 data-original="{{ mapping.get('match_url', (mapping.get('host', '') + ('/' + mapping.get('path', '') if mapping.get('path', '') else ''))) }}"
                                 onchange="markChanged(this)" {% if not is_admin %}readonly{% endif %}></td>
-            <td><input type="text" class="editable-input" value="{{ mapping.http_dest }}"
+            <td class="dest-cell"><input type="text" class="editable-input" value="{{ mapping.http_dest }}"
                 data-field="http_dest" data-index="{{ loop.index0 }}"
                 data-original="{{ mapping.http_dest }}" onchange="markChanged(this)" {% if not is_admin
                 %}readonly{% endif %}></td>
@@ -261,9 +273,9 @@
                         <td class="checkbox-cell">
                             <input type="checkbox" id="new-disabled">
                         </td>
-                        <td><input type="text" class="editable-input" id="new-match_url"
+                        <td class="source-cell"><input type="text" class="editable-input" id="new-match_url"
                                 placeholder="app.domain.com/path"></td>
-                        <td><input type="text" class="editable-input" id="new-http_dest"
+                        <td class="dest-cell"><input type="text" class="editable-input" id="new-http_dest"
                                 placeholder="http://localhost:8080"></td>
                         <td><input type="text" class="editable-input" id="new-allowed_users" placeholder="user1,user2"></td>
                         <td><input type="text" class="editable-input" id="new-allowed_groups" placeholder="group1,group2"></td>
