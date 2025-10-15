@@ -18,7 +18,9 @@
     {
       "match_url": "mynas.mysynology.me/api",
       "http_dest": "http://localhost:8081",
-      "flags": ["strip_path"],
+      "flags": [
+        "strip_path"
+      ],
       "allowed_users": [],
       "allowed_groups": []
     },
@@ -37,7 +39,7 @@
       "allowed_groups": []
     },
     {
-      "match_url": "test.mysynology.me",
+      "match_url": "test.mysynologydomain.com",
       "http_dest": "https://www.example.com",
       "flags": [],
       "allowed_users": [],

@@ -290,6 +290,14 @@
         <div class="header-right">
             {% block header_user %}{% endblock %}
             {% if request.headers.get('cookie') and 'auth=authenticated' in request.headers.get('cookie') %}
+            <a href="/synauthproxy" class="github-link" style="background: rgba(255, 255, 255, 0.1);">
+                <span>⚙️</span>
+                <span>Mappings</span>
+            </a>
+            <a href="/synauthproxy/metrics" class="github-link" style="background: rgba(255, 255, 255, 0.1);">
+                <span>📊</span>
+                <span>Metrics</span>
+            </a>
             <form method="get" action="/logout" style="margin:0 8px 0 0; display:inline;">
                 <button type="submit" class="logout-btn">Logout</button>
             </form>

@@ -4,6 +4,9 @@ import os
 import socket
 import sys
 import time
+from collections import defaultdict
+from datetime import datetime
+from threading import Lock
 from typing import Any
 
 import httpx
@@ -126,6 +129,18 @@ client = Client(
     dict=radius_dict,
 )
 
+# Metrics storage: {(mapping_url, username): {requests, bytes_sent, bytes_received, first_access, last_access}}
+metrics_storage = defaultdict(
+    lambda: {
+        "requests": 0,
+        "bytes_sent": 0,
+        "bytes_received": 0,
+        "first_access": None,
+        "last_access": None,
+    }
+)
+metrics_lock = Lock()
+
 # Load config from /app/config/synauthproxy.json
 
 
@@ -155,6 +170,29 @@ def save_mappings(mappings):
     except Exception as e:
         logging.error(f"Error saving mappings: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to save mappings: {str(e)}") from None
+
+
+def record_metrics(mapping_url: str, username: str, bytes_sent: int, bytes_received: int):
+    """Record metrics for a request."""
+    with metrics_lock:
+        key = (mapping_url, username)
+        metrics = metrics_storage[key]
+        metrics["requests"] += 1
+        metrics["bytes_sent"] += bytes_sent
+        metrics["bytes_received"] += bytes_received
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        if metrics["first_access"] is None:
+            metrics["first_access"] = now
+        metrics["last_access"] = now
+
+
+def format_bytes(byte_count: int) -> str:
+    """Format bytes into human-readable format."""
+    for unit in ["B", "KB", "MB", "GB", "TB"]:
+        if byte_count < 1024.0:
+            return f"{byte_count:.1f} {unit}"
+        byte_count /= 1024.0
+    return f"{byte_count:.1f} PB"
 
 
 class AuthRequestModel(BaseModel):
@@ -404,6 +442,56 @@ async def mappings_page(request: Request):
     )
 
 
+@app.get("/synauthproxy/metrics", response_class=HTMLResponse)
+async def metrics_page(request: Request):
+    if "auth=authenticated" not in request.headers.get("cookie", ""):
+        login_url = get_login_url(request, "/synauthproxy/metrics")
+        return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
+
+    username = get_username_from_cookie(request)
+
+    # Prepare metrics data for display
+    metrics_data = []
+    total_requests = 0
+    total_bytes_sent = 0
+    total_bytes_received = 0
+    active_users_set = set()
+
+    with metrics_lock:
+        for (mapping_url, user), metrics in sorted(metrics_storage.items()):
+            metrics_data.append(
+                {
+                    "mapping": mapping_url,
+                    "user": user,
+                    "requests": metrics["requests"],
+                    "bytes_sent": metrics["bytes_sent"],
+                    "bytes_received": metrics["bytes_received"],
+                    "first_access": metrics["first_access"] or "N/A",
+                    "last_access": metrics["last_access"] or "N/A",
+                }
+            )
+            total_requests += metrics["requests"]
+            total_bytes_sent += metrics["bytes_sent"]
+            total_bytes_received += metrics["bytes_received"]
+            active_users_set.add(user)
+
+    return templates.TemplateResponse(
+        "metrics.html",
+        {
+            "request": request,
+            "metrics_data": metrics_data,
+            "total_requests": total_requests,
+            "total_bytes_sent": total_bytes_sent,
+            "total_bytes_received": total_bytes_received,
+            "active_users": len(active_users_set),
+            "username": username,
+            "format_bytes": format_bytes,
+            "app_name": APP_NAME,
+            "app_tagline": APP_TAGLINE,
+        },
+    )
+
+
 @app.post("/synauthproxy/add")
 async def add_mapping(
     request: Request,
@@ -507,7 +595,7 @@ async def delete_mapping(request: Request, index: int):
 
 
 # HTTP proxy handler with WebSocket upgrade support
-async def proxy_request(request: Request, dest_url: str, path: str):
+async def proxy_request(request: Request, dest_url: str, path: str, mapping_url: str = "", username: str = ""):
     # Check if this is a WebSocket upgrade request
     upgrade_header = request.headers.get("upgrade", "").lower()
     connection_header = request.headers.get("connection", "").lower()
@@ -528,10 +616,12 @@ async def proxy_request(request: Request, dest_url: str, path: str):
         client = httpx.AsyncClient(timeout=300.0)
 
         # Prepare request based on method
+        body_bytes = 0
         if request.method == "GET":
             req = client.build_request("GET", full_url, headers=headers, params=request.query_params)
         elif request.method == "POST":
             body = await request.body()
+            body_bytes = len(body)
             req = client.build_request(
                 "POST",
                 full_url,
@@ -566,19 +656,29 @@ async def proxy_request(request: Request, dest_url: str, path: str):
         content_type = (resp.headers.get("content-type") or "").lower()
         is_sse = "text/event-stream" in content_type
 
+        # Track bytes received
+        bytes_received = 0
+
         async def generate():
+            nonlocal bytes_received
             try:
                 if is_sse:
                     # aiter_lines yields text without newline; re-add newline and
                     # encode to bytes for StreamingResponse.
                     async for line in resp.aiter_lines():
-                        yield (line + "\n").encode("utf-8")
+                        chunk = (line + "\n").encode("utf-8")
+                        bytes_received += len(chunk)
+                        yield chunk
                 else:
                     async for chunk in resp.aiter_bytes(chunk_size=8192):
+                        bytes_received += len(chunk)
                         yield chunk
             finally:
                 await resp.aclose()
                 await client.aclose()
+                # Record metrics after response is complete
+                if mapping_url and username:
+                    record_metrics(mapping_url, username, body_bytes, bytes_received)
 
         return StreamingResponse(
             generate(),
@@ -773,7 +873,7 @@ async def handle_request(request: Request, full_path: str = ""):
                 if target_path.startswith(prefix_to_strip):
                     target_path = target_path[len(prefix_to_strip) :] or "/"
 
-            # Proxy HTTP or WebSocket upgrade - pass the modified path
-            return await proxy_request(request, http_dest, target_path)
+            # Proxy HTTP or WebSocket upgrade - pass the modified path and metrics info
+            return await proxy_request(request, http_dest, target_path, match_url, payload.get("u", ""))
 
     raise HTTPException(status_code=404, detail="App not found")

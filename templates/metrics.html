@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}{{ app_name|default('RevProxAuth') }} Metrics{% endblock %}
+
+{% block additional_styles %}
+    .table-container {
+        background: white;
+        border-radius: 3px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        border: 1px solid #d7dce5;
+        margin-bottom: 20px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th,
+    td {
+        padding: 12px 16px;
+        text-align: left;
+    }
+
+    th {
+        background: #f7f7f7;
+        color: #555;
+        font-weight: 600;
+        font-size: 13px;
+        border-bottom: 2px solid #d7dce5;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    td {
+        border-bottom: 1px solid #e8e8e8;
+        color: #333;
+        font-size: 13px;
+        vertical-align: middle;
+        background: white;
+    }
+
+    tr:last-child td {
+        border-bottom: none;
+    }
+
+    tbody tr:hover td {
+        background-color: #f0f6ff;
+    }
+
+    .metric-value {
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-weight: 600;
+    }
+
+    .mapping-url {
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        color: #0084d6;
+    }
+
+    .bytes-value {
+        color: #5fad56;
+    }
+
+    .requests-value {
+        color: #f5a623;
+    }
+
+    .summary-card {
+        background: white;
+        border-radius: 3px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #d7dce5;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+    }
+
+    .summary-item {
+        text-align: center;
+    }
+
+    .summary-label {
+        font-size: 12px;
+        color: #888;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+
+    .summary-value {
+        font-size: 28px;
+        font-weight: 700;
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    }
+
+    .info-text {
+        color: #666;
+        font-size: 13px;
+        margin-bottom: 20px;
+        padding: 12px;
+        background: #f7f9fc;
+        border-radius: 3px;
+        border-left: 3px solid #0084d6;
+    }
+
+    .no-data {
+        text-align: center;
+        padding: 40px;
+        color: #888;
+        font-style: italic;
+    }
+
+    @media (max-width: 768px) {
+        th,
+        td {
+            padding: 8px 10px;
+            font-size: 12px;
+        }
+        
+        .summary-value {
+            font-size: 22px;
+        }
+    }
+{% endblock %}
+
+{% block header_user %}
+    {% if username %}
+    <div class="user-badge">
+        <span class="username">{{ username }}</span>
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <div class="info-text">
+            📊 Usage metrics are tracked per mapping per user. Data is collected in-memory and resets on application restart.
+        </div>
+
+        {% if total_requests > 0 %}
+        <div class="summary-card">
+            <h2 style="margin-top: 0; margin-bottom: 20px; color: #333;">Overall Summary</h2>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-label">Total Requests</div>
+                    <div class="summary-value requests-value">{{ "{:,}".format(total_requests) }}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Bytes Sent</div>
+                    <div class="summary-value bytes-value">{{ format_bytes(total_bytes_sent) }}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Bytes Received</div>
+                    <div class="summary-value bytes-value">{{ format_bytes(total_bytes_received) }}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Active Users</div>
+                    <div class="summary-value">{{ active_users }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mapping</th>
+                        <th>User</th>
+                        <th style="text-align: right;">Requests</th>
+                        <th style="text-align: right;">Bytes Sent</th>
+                        <th style="text-align: right;">Bytes Received</th>
+                        <th>First Access</th>
+                        <th>Last Access</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in metrics_data %}
+                    <tr>
+                        <td><span class="mapping-url">{{ entry.mapping }}</span></td>
+                        <td>{{ entry.user }}</td>
+                        <td class="metric-value requests-value" style="text-align: right;">{{ "{:,}".format(entry.requests) }}</td>
+                        <td class="metric-value bytes-value" style="text-align: right;">{{ format_bytes(entry.bytes_sent) }}</td>
+                        <td class="metric-value bytes-value" style="text-align: right;">{{ format_bytes(entry.bytes_received) }}</td>
+                        <td>{{ entry.first_access }}</td>
+                        <td>{{ entry.last_access }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="summary-card">
+            <div class="no-data">
+                No metrics data available yet. Metrics will appear here once users start accessing mapped applications.
+            </div>
+        </div>
+        {% endif %}
+    </div>
+{% endblock %}
