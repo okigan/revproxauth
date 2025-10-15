@@ -7,7 +7,7 @@ import time
 from collections import defaultdict
 from datetime import datetime
 from threading import Lock
-from typing import Any
+from typing import Any, TypedDict, cast
 
 import httpx
 import jwt
@@ -27,6 +27,16 @@ from pyrad.dictionary import Dictionary
 # Application branding
 APP_NAME = "RevProxAuth"
 APP_TAGLINE = "Dynamic reverse proxy with RADIUS-based authentication"
+
+
+# Type definitions for metrics
+class MetricsDict(TypedDict):
+    requests: int
+    bytes_sent: int
+    bytes_received: int
+    first_access: str | None
+    last_access: str | None
+
 
 app = FastAPI(
     # root_path="/synauthproxy"
@@ -59,7 +69,7 @@ AUTHZ_COOKIE_NAME = "authz"
 AUTHZ_TTL = int(os.getenv("AUTHZ_TTL", "3600"))
 
 # Validate required environment variables
-missing_vars = []
+missing_vars: list[str] = []
 if not RADIUS_SERVER:
     missing_vars.append("RADIUS_SERVER")
 if not RADIUS_SECRET:
@@ -120,6 +130,11 @@ Admin Users:   {", ".join(ADMIN_USERS) if ADMIN_USERS else "(all authenticated u
 """
 print(startup_banner, flush=True)
 
+# Ensure RADIUS_SERVER and RADIUS_SECRET are non-None after validation
+# They are checked above and the program exits if they're missing
+assert RADIUS_SERVER is not None
+assert RADIUS_SECRET is not None
+
 # Initialize RADIUS client and dictionary
 radius_dict = Dictionary("/app/dictionary")
 client = Client(
@@ -130,14 +145,14 @@ client = Client(
 )
 
 # Metrics storage: {(mapping_url, username): {requests, bytes_sent, bytes_received, first_access, last_access}}
-metrics_storage = defaultdict(
-    lambda: {
-        "requests": 0,
-        "bytes_sent": 0,
-        "bytes_received": 0,
-        "first_access": None,
-        "last_access": None,
-    }
+metrics_storage: defaultdict[tuple[str, str], MetricsDict] = defaultdict(
+    lambda: MetricsDict(
+        requests=0,
+        bytes_sent=0,
+        bytes_received=0,
+        first_access=None,
+        last_access=None,
+    )
 )
 metrics_lock = Lock()
 
@@ -162,9 +177,9 @@ def load_mappings():
     return config.get("mappings", [])
 
 
-def save_mappings(mappings):
+def save_mappings(mappings: list[dict[str, Any]]) -> None:
     try:
-        config = {"version": "1.0", "mappings": mappings}
+        config: dict[str, Any] = {"version": "1.0", "mappings": mappings}
         with open("/app/config/synauthproxy.json", "w") as f:
             json.dump(config, f, indent=2)
     except Exception as e:
@@ -195,11 +210,12 @@ def update_metrics(
 
 def format_bytes(byte_count: int) -> str:
     """Format bytes into human-readable format."""
+    count = float(byte_count)
     for unit in ["B", "KB", "MB", "GB", "TB"]:
-        if byte_count < 1024.0:
-            return f"{byte_count:.1f} {unit}"
-        byte_count /= 1024.0
-    return f"{byte_count:.1f} PB"
+        if count < 1024.0:
+            return f"{count:.1f} {unit}"
+        count /= 1024.0
+    return f"{count:.1f} PB"
 
 
 class AuthRequestModel(BaseModel):
@@ -210,7 +226,7 @@ class AuthRequestModel(BaseModel):
 class MappingModel(BaseModel):
     match_url: str  # Combined host/path like "app.mysynology.me/path"
     http_dest: str
-    flags: list  # Array of flags: "strip_path", "disabled", etc.
+    flags: list[str]  # Array of flags: "strip_path", "disabled", etc.
 
 
 def is_admin_user(username: str) -> bool:
@@ -295,7 +311,7 @@ async def login(
             # and compute which mappings the user is allowed to access. We do
             # NOT store raw groups on the client. Instead we create a signed
             # JWT containing allowed mapping indices and expiry (stateless).
-            groups = []
+            groups: list[str] = []
             try:
                 for attr in ("Filter-Id", "Group", "Cisco-AVPair"):
                     if attr in reply:
@@ -321,8 +337,8 @@ async def login(
                 mappings = load_mappings()
                 for mapping in mappings:
                     # Handle empty lists properly
-                    au = mapping.get("allowed_users", None) or []
-                    ag = mapping.get("allowed_groups", None) or []
+                    au: list[str] = mapping.get("allowed_users", None) or []
+                    ag: list[str] = mapping.get("allowed_groups", None) or []
                     logging.debug(f"Raw allowed_users: {mapping.get('allowed_users')}, processed: {au}")
                     logging.debug(f"Raw allowed_groups: {mapping.get('allowed_groups')}, processed: {ag}")
                     match_url = mapping.get("match_url", "")
@@ -359,7 +375,7 @@ async def login(
                 logging.debug("Error computing allowed mappings; defaulting to none")
 
             # Create stateless JWT with allowed mapping URLs
-            payload = {"u": username, "m": allowed_urls, "exp": int(time.time()) + AUTHZ_TTL}
+            payload: dict[str, Any] = {"u": username, "m": allowed_urls, "exp": int(time.time()) + AUTHZ_TTL}
             logging.info(f"User '{username}' logged in successfully. Allowed mappings: {allowed_urls}")
             try:
                 token = jwt.encode(payload, SESSION_SECRET, algorithm="HS256")
@@ -458,11 +474,11 @@ async def metrics_page(request: Request):
     username = get_username_from_cookie(request)
 
     # Prepare metrics data for display
-    metrics_data = []
+    metrics_data: list[dict[str, Any]] = []
     total_requests = 0
     total_bytes_sent = 0
     total_bytes_received = 0
-    active_users_set = set()
+    active_users_set: set[str] = set()
 
     with metrics_lock:
         for (mapping_url, user), metrics in sorted(metrics_storage.items()):
@@ -875,7 +891,7 @@ async def handle_request(request: Request, full_path: str = ""):
                 return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
 
             try:
-                payload = jwt.decode(token, SESSION_SECRET, algorithms=["HS256"]) or {}
+                payload = cast(dict[str, Any], jwt.decode(token, SESSION_SECRET, algorithms=["HS256"]))
                 logging.debug(f"JWT payload for user '{payload.get('u')}': allowed mappings {payload.get('m', [])}")
             except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
                 # Token is either expired or invalid - force login
@@ -883,7 +899,9 @@ async def handle_request(request: Request, full_path: str = ""):
                 login_url = get_login_url(request, next_url)
                 return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
 
-            allowed_urls = payload.get("m", []) if isinstance(payload.get("m", []), list) else []
+            allowed_urls: list[str] = (
+                cast(list[str], payload.get("m", [])) if isinstance(payload.get("m", []), list) else []
+            )
             if match_url not in allowed_urls:
                 logging.warning(
                     f"Access denied: user '{payload.get('u')}' not authorized for mapping '{mapping.get('match_url')}'"

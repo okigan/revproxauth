@@ -42,6 +42,8 @@ lint:
 	uv run ruff check . --fix
 	@echo "✨ Running ruff format..."
 	uv run ruff format .
+	@echo "🔬 Running pyright type checker..."
+	uv run pyright
 
 # Check linting without making changes
 lint-check:
@@ -49,6 +51,8 @@ lint-check:
 	uv run ruff check .
 	@echo "✨ Running ruff format check..."
 	uv run ruff format --check .
+	@echo "🔬 Running pyright type checker..."
+	uv run pyright
 
 # Format code with ruff
 format:
@@ -70,6 +74,12 @@ install-hooks:
 	@echo 'uv run ruff format .' >> .git/hooks/pre-commit
 	@echo 'if [ $$? -ne 0 ]; then' >> .git/hooks/pre-commit
 	@echo '  echo "❌ Ruff format failed. Please fix the issues and try again."' >> .git/hooks/pre-commit
+	@echo '  exit 1' >> .git/hooks/pre-commit
+	@echo 'fi' >> .git/hooks/pre-commit
+	@echo 'echo "🔬 Running pyright type checker..."' >> .git/hooks/pre-commit
+	@echo 'uv run pyright' >> .git/hooks/pre-commit
+	@echo 'if [ $$? -ne 0 ]; then' >> .git/hooks/pre-commit
+	@echo '  echo "❌ Type check failed. Please fix the issues and try again."' >> .git/hooks/pre-commit
 	@echo '  exit 1' >> .git/hooks/pre-commit
 	@echo 'fi' >> .git/hooks/pre-commit
 	@echo 'git add -u' >> .git/hooks/pre-commit

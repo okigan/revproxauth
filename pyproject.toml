@@ -24,6 +24,7 @@ packages = ["."]
 [dependency-groups]
 dev = [
     "ruff>=0.14.0",
+    "pyright>=1.1.0",
 ]
 
 [tool.ruff]
@@ -48,3 +49,18 @@ ignore = []
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+[tool.pyright]
+typeCheckingMode = "basic"  # or "standard" or "strict"
+pythonVersion = "3.12"
+exclude = [
+    "**/__pycache__",
+    "**/node_modules",
+    ".venv",
+    "pyrad-stubs",
+    "tools"  # Build tools have separate dependencies
+]
+# Optionally ignore the external library issues
+reportUnknownParameterType = "none"  # Ignore unknown types in library parameters
+reportUnknownVariableType = "none"   # Ignore unknown variable types from libraries
+reportUnknownArgumentType = "none"   # Ignore unknown argument types
