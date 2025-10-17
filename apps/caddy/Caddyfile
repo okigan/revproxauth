@@ -41,7 +41,7 @@
         }
 
         # Proxy to backend application
-        reverse_proxy whoami:80 {
+        reverse_proxy nvbox:8080 {
             header_up Host {host}
             header_up X-Real-IP {remote}
         }

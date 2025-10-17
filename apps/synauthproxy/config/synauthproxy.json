@@ -3,7 +3,7 @@
   "mappings": [
     {
       "match_url": "localhost",
-      "http_dest": "http://whoami",
+      "http_dest": "http://nvbox:8080",
       "flags": [],
       "allowed_users": [],
       "allowed_groups": []
