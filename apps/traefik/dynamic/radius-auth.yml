@@ -20,7 +20,7 @@ http:
       rule: "PathPrefix(`/`)"
       middlewares:
         - radius-auth
-      service: nvbox
+      service: whoami
       entryPoints:
         - web
 
@@ -30,7 +30,7 @@ http:
         servers:
           - url: "http://radius-auth:5000"
 
-    nvbox:
+    whoami:
       loadBalancer:
         servers:
-          - url: "http://nvbox:8080"
+          - url: "http://whoami:80"

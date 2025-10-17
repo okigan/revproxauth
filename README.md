@@ -455,7 +455,78 @@ synauthproxy/
 
 ---
 
-## 🤝 Contributing
+## � Testing with Custom Backend
+
+By default, all proxy stacks route to the included `whoami` test container. To test with your own backend service:
+
+### Option 1: Using `/etc/hosts` (Recommended for Quick Testing)
+
+Map custom hostnames to localhost or other IPs:
+
+```bash
+# Add to /etc/hosts
+sudo sh -c 'echo "127.0.0.1 nvbox" >> /etc/hosts'
+
+# Or point to another IP
+sudo sh -c 'echo "192.168.1.100 myapp" >> /etc/hosts'
+```
+
+Then update the backend URLs in config files:
+- **SynAuthProxy**: `apps/synauthproxy/config/synauthproxy.json` - change `http_dest`
+- **nginx**: `apps/nginx/config/default.conf` - change `proxy_pass`
+- **Traefik**: `apps/traefik/dynamic/radius-auth.yml` - change service URL
+- **Caddy**: `apps/caddy/Caddyfile` - change `reverse_proxy`
+
+### Option 2: Docker Network (For Containerized Services)
+
+Add your test service to the same Docker networks:
+
+```yaml
+services:
+  myapp:
+    image: my-test-image
+    networks:
+      - synauthproxy-network
+      - nginx-network
+      - traefik-network
+      - caddy-network
+    ports:
+      - "8080:8080"
+```
+
+Reference it by service name (e.g., `http://myapp:8080`) in the configs.
+
+### Option 3: Environment Variables (Coming Soon)
+
+Future versions will support environment variable overrides:
+
+```bash
+BACKEND_HOST=nvbox BACKEND_PORT=8080 make up-nginx
+```
+
+### Testing Endpoints
+
+After configuration, test each proxy:
+
+```bash
+# SynAuthProxy
+curl -I http://localhost:9000
+
+# nginx
+curl -I http://localhost:9010
+
+# Traefik
+curl -I http://localhost:9020
+
+# Caddy
+curl -I http://localhost:9030
+```
+
+All should redirect to `/login?next=/` when unauthenticated.
+
+---
+
+## �🤝 Contributing
 
 Contributions welcome! Fork the repo, create a feature branch, and submit a pull request.
 
