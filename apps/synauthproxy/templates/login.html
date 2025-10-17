@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}{{ app_name|default('RevProxAuth') }} Login{% endblock %}
+
+{% block body_style %}
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+{% endblock %}
+
+{% block header_position %}
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+{% endblock %}
+
+{% block additional_styles %}
+    .login-container { 
+        background: white;
+        padding: 40px;
+        border-radius: 3px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        width: 100%;
+        max-width: 400px;
+        border: 1px solid #d7dce5;
+        margin-top: 100px;
+    }
+
+    h2 { 
+        text-align: center;
+        color: #2c3e50;
+        margin-bottom: 30px;
+        font-size: 22px;
+        font-weight: 600;
+    }
+
+    .form-group { 
+        margin-bottom: 20px;
+    }
+
+    label { 
+        display: block;
+        margin-bottom: 8px;
+        color: #555;
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    button { 
+        width: 100%;
+        padding: 12px;
+        font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+        .login-container {
+            padding: 30px 20px;
+            margin: 80px 20px 20px;
+        }
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="login-container">
+        <h2>Login</h2>
+        {% if unrestricted_access %}
+        <p style="color: #d84b4b; background: #fff9e6; padding: 12px; border-radius: 3px; border: 1px solid #f5a623; margin-bottom: 20px; font-size: 13px; line-height: 1.5;">
+            <strong style="display: block; margin-bottom: 4px;">⚠️ Security Warning</strong>
+            Mapping editing is unrestricted! All authenticated users can modify proxy mappings. Set <code style="background: rgba(0,0,0,0.15); padding: 2px 5px; border-radius: 2px; font-family: monospace; font-size: 12px;">SYNAUTHPROXY_ADMIN_USERS</code> to restrict access.
+        </p>
+        {% endif %}
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+        <form method="post" action="/login">
+            <input type="hidden" name="next" value="{{ next }}">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required autofocus>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+{% endblock %}

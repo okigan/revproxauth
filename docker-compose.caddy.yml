@@ -1,0 +1,65 @@
+# Caddy + RADIUS Authentication Stack
+# Complete setup with Caddy, RADIUS, and test application
+
+services:
+  # RADIUS authentication server
+  radius:
+    image: freeradius/freeradius-server:latest
+    container_name: caddy-radius
+    restart: unless-stopped
+    ports:
+      - "9031:1812/udp"
+    volumes:
+      - ./apps/radius/config/clients.conf:/etc/raddb/clients.conf:ro
+      - ./apps/radius/config/users:/etc/raddb/mods-config/files/authorize:ro
+    networks:
+      - auth-network
+
+  # Caddy reverse proxy with forward_auth
+  caddy:
+    build:
+      context: ./apps/caddy
+      dockerfile: Dockerfile
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "9030:80"
+    volumes:
+      - ./apps/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - radius-auth
+      - whoami
+    networks:
+      - auth-network
+
+  # RADIUS authentication backend (shared)
+  radius-auth:
+    build:
+      context: ./apps/radius-auth
+      dockerfile: Dockerfile
+    container_name: caddy-radius-auth
+    restart: unless-stopped
+    environment:
+      RADIUS_SERVER: radius
+      RADIUS_SECRET: testing123
+      RADIUS_PORT: 1812
+      RADIUS_NAS_IDENTIFIER: caddy-auth
+      SESSION_TIMEOUT: 3600
+      PROXY_NAME: Caddy
+    depends_on:
+      - radius
+    networks:
+      - auth-network
+
+  # Test backend application
+  whoami:
+    image: traefik/whoami:latest
+    container_name: caddy-whoami
+    restart: unless-stopped
+    networks:
+      - auth-network
+
+networks:
+  auth-network:
+    name: caddy-network
+    driver: bridge

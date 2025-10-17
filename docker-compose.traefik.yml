@@ -1,0 +1,70 @@
+# Traefik + RADIUS Authentication Stack
+# Complete setup with Traefik, RADIUS, and test application
+
+services:
+  # RADIUS authentication server
+  radius:
+    image: freeradius/freeradius-server:latest
+    container_name: traefik-radius
+    restart: unless-stopped
+    ports:
+      - "9022:1812/udp"
+    volumes:
+      - ./apps/radius/config/clients.conf:/etc/raddb/clients.conf:ro
+      - ./apps/radius/config/users:/etc/raddb/mods-config/files/authorize:ro
+    networks:
+      - auth-network
+
+  # Traefik reverse proxy with ForwardAuth
+  traefik:
+    image: traefik:v2.10
+    container_name: traefik
+    restart: unless-stopped
+    command:
+      - "--configFile=/etc/traefik/traefik.yml"
+    ports:
+      - "9020:80"      # Main entry point
+      - "9021:8080"    # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./apps/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./apps/traefik/dynamic:/etc/traefik/dynamic:ro
+    depends_on:
+      - radius-auth
+      - whoami
+    networks:
+      - auth-network
+
+  # RADIUS authentication backend (shared)
+  radius-auth:
+    build:
+      context: ./apps/radius-auth
+      dockerfile: Dockerfile
+    container_name: traefik-radius-auth
+    restart: unless-stopped
+    environment:
+      RADIUS_SERVER: radius
+      RADIUS_SECRET: testing123
+      RADIUS_PORT: 1812
+      RADIUS_NAS_IDENTIFIER: traefik-auth
+      SESSION_TIMEOUT: 3600
+      PROXY_NAME: Traefik
+    depends_on:
+      - radius
+    networks:
+      - auth-network
+
+  # Test backend application
+  whoami:
+    image: traefik/whoami:latest
+    container_name: traefik-whoami
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=false"  # Managed via dynamic config
+    networks:
+      - auth-network
+
+networks:
+  auth-network:
+    name: traefik-network
+    driver: bridge

@@ -1,0 +1,7 @@
+# Test Users
+# Format: username Cleartext-Password := "password"
+
+testuser Cleartext-Password := "testpass"
+admin Cleartext-Password := "admin123"
+alice Cleartext-Password := "alice123"
+bob Cleartext-Password := "bob123"

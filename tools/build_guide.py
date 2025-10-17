@@ -71,7 +71,9 @@ def main():
                     # Found an image - use it instead of placeholder
                     img_src = img_tag.get("src")
                     img_alt = img_tag.get("alt", title)
-                    image_html = f'<img src="{img_src}" alt="{img_alt}" class="slide-image" />'
+                    image_html = (
+                        f'<img src="{img_src}" alt="{img_alt}" class="slide-image" />'
+                    )
                     continue  # Don't add the img paragraph to body content
             elems.append(str(sib))
         body_html = "\n".join(elems).strip()

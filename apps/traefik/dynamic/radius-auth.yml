@@ -1,0 +1,36 @@
+http:
+  middlewares:
+    radius-auth:
+      forwardAuth:
+        address: "http://radius-auth:5000/auth"
+        trustForwardHeader: true
+        authResponseHeaders:
+          - "X-Auth-User"
+
+  routers:
+    # Login and logout routes (no auth required)
+    auth-routes:
+      rule: "PathPrefix(`/login`) || PathPrefix(`/do-login`) || PathPrefix(`/logout`)"
+      service: radius-auth
+      entryPoints:
+        - web
+
+    # Protected routes - require authentication
+    app:
+      rule: "PathPrefix(`/`)"
+      middlewares:
+        - radius-auth
+      service: whoami
+      entryPoints:
+        - web
+
+  services:
+    radius-auth:
+      loadBalancer:
+        servers:
+          - url: "http://radius-auth:5000"
+
+    whoami:
+      loadBalancer:
+        servers:
+          - url: "http://whoami:80"

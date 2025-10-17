@@ -1,0 +1,56 @@
+{
+  "version": "1.0",
+  "mappings": [
+    {
+      "match_url": "localhost",
+      "http_dest": "http://whoami",
+      "flags": [],
+      "allowed_users": [],
+      "allowed_groups": []
+    },
+    {
+      "match_url": "grafana.mysynology.me",
+      "http_dest": "http://localhost:3000",
+      "flags": [],
+      "allowed_users": [],
+      "allowed_groups": []
+    },
+    {
+      "match_url": "jenkins.mysynology.me",
+      "http_dest": "http://localhost:8080",
+      "flags": [],
+      "allowed_users": [],
+      "allowed_groups": []
+    },
+    {
+      "match_url": "mynas.mysynology.me/api",
+      "http_dest": "http://localhost:8081",
+      "flags": [
+        "strip_path"
+      ],
+      "allowed_users": [],
+      "allowed_groups": []
+    },
+    {
+      "match_url": "portainer.mysynology.me",
+      "http_dest": "http://localhost:9000",
+      "flags": [],
+      "allowed_users": [],
+      "allowed_groups": []
+    },
+    {
+      "match_url": "chatgpt.mysynology.me",
+      "http_dest": "http://192.168.1.100:8080",
+      "flags": [],
+      "allowed_users": [],
+      "allowed_groups": []
+    },
+    {
+      "match_url": "test.mysynologydomain.com",
+      "http_dest": "https://www.example.com",
+      "flags": [],
+      "allowed_users": [],
+      "allowed_groups": []
+    }
+  ]
+}

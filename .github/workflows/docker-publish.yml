@@ -34,13 +34,19 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: uv sync
+        run: |
+          cd apps/synauthproxy
+          uv sync
 
       - name: Run ruff check
-        run: uv run ruff check .
+        run: |
+          cd apps/synauthproxy
+          uv run ruff check .
 
       - name: Run ruff format check
-        run: uv run ruff format --check .
+        run: |
+          cd apps/synauthproxy
+          uv run ruff format --check .
 
   build-and-push:
     runs-on: ubuntu-latest
@@ -84,7 +90,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./apps/synauthproxy
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}

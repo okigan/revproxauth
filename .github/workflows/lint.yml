@@ -28,7 +28,13 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: uv sync
+        run: |
+          cd apps/synauthproxy
+          uv sync
 
       - name: Run lint checks
-        run: make lint-check
+        run: |
+          cd apps/synauthproxy
+          uv run ruff check .
+          uv run ruff format --check .
+          uv run pyright

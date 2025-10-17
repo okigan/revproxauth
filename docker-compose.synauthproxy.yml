@@ -1,0 +1,58 @@
+# SynAuthProxy Full Stack
+# Complete setup with SynAuthProxy, RADIUS, and test application
+
+services:
+  # RADIUS authentication server
+  radius:
+    image: freeradius/freeradius-server:latest
+    container_name: synauthproxy-radius
+    restart: unless-stopped
+    ports:
+      - "9001:1812/udp"
+    volumes:
+      - ./apps/radius/config/clients.conf:/etc/raddb/clients.conf:ro
+      - ./apps/radius/config/users:/etc/raddb/mods-config/files/authorize:ro
+    networks:
+      - auth-network
+
+  # SynAuthProxy - Python FastAPI authentication proxy
+  synauthproxy:
+    build:
+      context: ./apps/synauthproxy
+      dockerfile: Dockerfile
+    container_name: synauthproxy
+    restart: unless-stopped
+    environment:
+      RADIUS_SERVER: radius
+      RADIUS_SECRET: testing123
+      RADIUS_PORT: 1812
+      RADIUS_NAS_IDENTIFIER: synauthproxy
+      LOGIN_DOMAIN: localhost:9000
+      SYNAUTHPROXY_ADMIN_USERS: admin
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./apps/synauthproxy/main.py:/app/main.py
+      - ./apps/synauthproxy/dictionary:/app/dictionary
+      - ./apps/synauthproxy/templates:/app/templates
+      - ./apps/synauthproxy/static:/app/static
+      - ./apps/synauthproxy/config:/app/config
+      - /etc/localtime:/etc/localtime:ro
+    depends_on:
+      - radius
+      - whoami
+    networks:
+      - auth-network
+
+  # Test backend application
+  whoami:
+    image: traefik/whoami:latest
+    container_name: synauthproxy-whoami
+    restart: unless-stopped
+    networks:
+      - auth-network
+
+networks:
+  auth-network:
+    name: synauthproxy-network
+    driver: bridge

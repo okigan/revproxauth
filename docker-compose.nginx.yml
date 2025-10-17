@@ -1,0 +1,67 @@
+# Nginx + RADIUS Authentication Stack
+# Complete setup with nginx, RADIUS, and test application
+
+services:
+  # RADIUS authentication server
+  radius:
+    image: freeradius/freeradius-server:latest
+    container_name: nginx-radius
+    restart: unless-stopped
+    ports:
+      - "9011:1812/udp"
+    volumes:
+      - ./apps/radius/config/clients.conf:/etc/raddb/clients.conf:ro
+      - ./apps/radius/config/users:/etc/raddb/mods-config/files/authorize:ro
+    networks:
+      - auth-network
+
+  # Nginx reverse proxy with auth_request
+  nginx:
+    build:
+      context: ./apps/nginx
+      dockerfile: Dockerfile
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "9010:80"
+    volumes:
+      - ./apps/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./apps/nginx/config:/etc/nginx/conf.d:ro
+    depends_on:
+      - radius-auth
+      - whoami
+    networks:
+      - auth-network
+
+  # RADIUS authentication backend (shared)
+  radius-auth:
+    build:
+      context: ./apps/radius-auth
+      dockerfile: Dockerfile
+    container_name: nginx-radius-auth
+    restart: unless-stopped
+    environment:
+      RADIUS_SERVER: radius
+      RADIUS_SECRET: testing123
+      RADIUS_PORT: 1812
+      RADIUS_NAS_IDENTIFIER: nginx-auth
+      SESSION_TIMEOUT: 3600
+      PROXY_TYPE: nginx
+      PROXY_NAME: nginx
+    depends_on:
+      - radius
+    networks:
+      - auth-network
+
+  # Test backend application
+  whoami:
+    image: traefik/whoami:latest
+    container_name: nginx-whoami
+    restart: unless-stopped
+    networks:
+      - auth-network
+
+networks:
+  auth-network:
+    name: nginx-network
+    driver: bridge
