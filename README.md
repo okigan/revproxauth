@@ -219,6 +219,24 @@ All components in this repository are published as multi-architecture Docker ima
 - radius-auth-go: [`apps/radius-auth-go/`](apps/radius-auth-go/)
 - radius-auth-py: [`apps/radius-auth-py/`](apps/radius-auth-py/)
 
+---
+
+## 🚀 Quick Start
+
+Choose your deployment:
+
+1. **[RevProxAuth (Synology)](#-revproxauth-setup-synology)** - All-in-one with web UI
+2. **[Caddy + radius-auth](#-caddy--radius-auth-setup)** - With Caddy
+3. **[Traefik + radius-auth](#-traefik--radius-auth-setup)** - With Traefik
+4. **[Nginx + radius-auth](#-nginx--radius-auth-setup)** - With Nginx
+
+📥 **Download all Synology example configs:**
+
+```bash
+curl -L https://github.com/okigan/revproxauth/archive/refs/heads/main.tar.gz | tar -xz --strip=3 revproxauth-main/example-configs/synology
+```
+
+This downloads all four deployment options (RevProxAuth, Caddy, Traefik, Nginx) for testing and comparison.
 
 ---
 
@@ -411,6 +429,7 @@ services:
       RADIUS_SERVER: 172.17.0.1        # Synology host
       RADIUS_SECRET: your-secret-here
       RADIUS_PORT: 1812
+      RADIUS_NAS_IDENTIFIER: radius_auth_go
       SESSION_TIMEOUT: 3600
 
   caddy:
@@ -430,9 +449,11 @@ volumes:
 
 ### Caddyfile - Protect Multiple Sites
 
+**Option A: Caddy behind Synology (Synology handles HTTPS)**
+
 ```caddyfile
 {
-    email your-email@example.com
+    auto_https off  # Synology handles certificates
 }
 
 # Shared auth configuration
@@ -453,22 +474,66 @@ volumes:
     }
 }
 
-# Protected sites
-app1.yourdomain.com {
-    import protected
+# Protected sites (HTTP only - Synology terminates HTTPS)
+app1.yourdomain.com:80 {
     import auth-routes
+    import protected
+    reverse_proxy app1:8080
+}
+
+app2.yourdomain.com:80 {
+    import auth-routes
+    import protected
+    reverse_proxy app2:3000
+}
+
+app3.yourdomain.com:80 {
+    import auth-routes
+    import protected
+    reverse_proxy app3:5000
+}
+```
+
+**Option B: Caddy with automatic HTTPS (standalone)**
+
+```caddyfile
+{
+    email your-email@example.com  # ⚠️ CHANGE THIS!
+}
+
+# Same snippets as above...
+(protected) {
+    forward_auth radius-auth-go:8999 {
+        uri /auth
+        copy_headers X-Auth-User
+    }
+}
+
+(auth-routes) {
+    handle /login* {
+        reverse_proxy radius-auth-go:8999
+    }
+    handle /logout {
+        reverse_proxy radius-auth-go:8999
+    }
+}
+
+# Protected sites (Caddy handles HTTPS automatically)
+app1.yourdomain.com {
+    import auth-routes
+    import protected
     reverse_proxy app1:8080
 }
 
 app2.yourdomain.com {
-    import protected
     import auth-routes
+    import protected
     reverse_proxy app2:3000
 }
 
 app3.yourdomain.com {
-    import protected
     import auth-routes
+    import protected
     reverse_proxy app3:5000
 }
 ```
@@ -499,6 +564,7 @@ services:
       RADIUS_SERVER: 172.17.0.1        # Synology host
       RADIUS_SECRET: your-secret-here
       RADIUS_PORT: 1812
+      RADIUS_NAS_IDENTIFIER: radius_auth_go
       SESSION_TIMEOUT: 3600
 
   traefik:
@@ -595,6 +661,7 @@ services:
       RADIUS_SERVER: 172.17.0.1        # Synology host
       RADIUS_SECRET: your-secret-here
       RADIUS_PORT: 1812
+      RADIUS_NAS_IDENTIFIER: radius_auth_py
       SESSION_TIMEOUT: 3600
 
   nginx:

@@ -5,6 +5,7 @@ services:
       RADIUS_SERVER: 172.17.0.1        # Synology host
       RADIUS_SECRET: your-secret-here  # ⚠️ CHANGE THIS!
       RADIUS_PORT: 1812
+      RADIUS_NAS_IDENTIFIER: radius_auth_go
       SESSION_TIMEOUT: 3600
 
   caddy:

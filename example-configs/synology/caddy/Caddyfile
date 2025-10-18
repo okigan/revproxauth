@@ -1,5 +1,7 @@
 {
-    email your-email@example.com
+    # If Synology handles HTTPS, remove email and use auto_https off
+    # email your-email@example.com  # ⚠️ CHANGE THIS to your real email!
+    auto_https off
 }
 
 # Shared auth configuration
@@ -21,20 +23,23 @@
 }
 
 # Protected sites
-app1.yourdomain.com {
-    import protected
-    import auth-routes
-    reverse_proxy app1:8080
-}
-
-app2.yourdomain.com {
-    import protected
-    import auth-routes
-    reverse_proxy app2:3000
-}
-
-app3.yourdomain.com {
-    import protected
-    import auth-routes
-    reverse_proxy app3:5000
+gpt-caddy.okulist.com:80 {  # Explicitly listen on port 80 only
+    route {
+        # Login/logout routes (no auth) - handle FIRST
+        handle /login* {
+            reverse_proxy radius-auth-go:8999
+        }
+        handle /logout {
+            reverse_proxy radius-auth-go:8999
+        }
+        
+        # Everything else requires auth
+        handle {
+            forward_auth radius-auth-go:8999 {
+                uri /auth
+                copy_headers X-Auth-User
+            }
+            reverse_proxy http://nvbox:8080
+        }
+    }
 }
