@@ -1,4 +1,4 @@
-# 🔐 RevProxAuth
+# 🔐 RevProxAuth and standalone RADIUS middleware
 
 > **RADIUS authentication for reverse proxies** - Complete all-in-one solution + lightweight middleware for Caddy, Traefik, and Nginx
 
@@ -12,28 +12,28 @@
 
 ## 🎯 The Problem
 
-You have multiple self-hosted applications with fragmented authentication:
+You have self-hosted services that **lack authentication entirely**:
 
-- ❌ **Different passwords** for each service
-- ❌ **Security gaps** - Some apps exposed without proper auth
-- ❌ **User management nightmare** - Add/remove users in multiple places
-- ❌ **No centralized access control**
+- ❌ **No built-in authentication** - Applications exposed without any login mechanism
+- ❌ **Security gaps** - Internal tools, legacy apps, or services that trust the network
+- ❌ **Can't modify the app** - Third-party services you can't add auth code to
+- ❌ **Need centralized control** - Want RADIUS-based authentication without touching the app
 
-## ✨ The Solutions
+Add **authentication to services that have none** by placing RADIUS-based auth in front of them using reverse proxies.
 
 This repository provides **multiple RADIUS authentication solutions** for reverse proxy infrastructure:
 
 1. **RevProxAuth (All-in-One)** - Complete reverse proxy with authentication and web UI
-2. **radius-auth-go** - Lightweight Go implementation supporting forward auth and auth_request protocols
-3. **radius-auth-py** - Lightweight Python implementation supporting forward auth and auth_request protocols
+2. **radius-auth-go** - Lightweight Go middleware for Caddy/Traefik/Nginx
+3. **radius-auth-py** - Lightweight Python middleware for Caddy/Traefik/Nginx
 
 **Key Benefits:**
-- ✅ **Single Sign-On** - One authentication system for all apps
+- ✅ **Add auth where none exists** - Protect unprotected services instantly
 - ✅ **RADIUS Integration** - Use existing RADIUS servers (Synology, FreeRADIUS, etc.)
+- ✅ **Zero Application Changes** - Apps don't need modification or auth code
 - ✅ **Flexible Deployment** - Full proxy or lightweight auth middleware
 - ✅ **WebSocket Support** - Automatic HTTP → WebSocket upgrades
-- ✅ **Path Manipulation** - Strip prefixes, rewrite URLs (RevProxAuth)
-- ✅ **Zero Application Changes** - Apps don't need auth code
+- ✅ **Production Ready** - Docker images for AMD64 and ARM64
 
 ---
 
@@ -43,7 +43,7 @@ This repository provides **multiple RADIUS authentication solutions** for revers
 
 ## 🏗️ What's in This Repository
 
-This repository provides **complete RADIUS authentication solutions** for different reverse proxy architectures. All components are production-ready and available as Docker images:
+This repository provides **RADIUS authentication components** for different reverse proxy architectures. All components are available as Docker images:
 
 - **RevProxAuth** - All-in-one solution with routing, auth, and web UI (one container does it all)
 - **radius-auth-go** - Lightweight auth middleware (Go) supporting forward auth and auth_request protocols
@@ -111,10 +111,10 @@ graph LR
 ```
 
 **Features:**
-- ✅ Automatic HTTPS certificate management
-- ✅ Lightweight Go-based RADIUS auth service
-- ✅ Caddy handles all routing via Caddyfile
+- ✅ Lightweight Go-based RADIUS auth middleware
 - ✅ Minimal resource usage
+- ✅ Forward auth protocol support
+- ✅ Works with Caddy's automatic HTTPS
 
 **Docker Images:** 
 - `caddy:latest`
@@ -147,10 +147,10 @@ graph LR
 ```
 
 **Features:**
-- ✅ Dynamic service discovery (Docker labels)
-- ✅ Automatic HTTPS with Let's Encrypt
-- ✅ Dashboard for monitoring
-- ✅ Perfect for Docker/Kubernetes environments
+- ✅ Lightweight Go-based RADIUS auth middleware
+- ✅ Forward auth protocol support
+- ✅ Works with Traefik's dynamic service discovery
+- ✅ Compatible with Docker/Kubernetes environments
 
 **Docker Images:**
 - `traefik:latest`
@@ -183,10 +183,10 @@ graph LR
 ```
 
 **Features:**
-- ✅ Battle-tested production stability
-- ✅ High performance
-- ✅ Fine-grained configuration control
-- ✅ auth_request module integration
+- ✅ Python-based RADIUS auth middleware
+- ✅ auth_request protocol support
+- ✅ Works with Nginx's battle-tested stability
+- ✅ Easy to customize and extend
 
 **Docker Images:**
 - `nginx:latest`
@@ -219,16 +219,6 @@ All components in this repository are published as multi-architecture Docker ima
 - radius-auth-go: [`apps/radius-auth-go/`](apps/radius-auth-go/)
 - radius-auth-py: [`apps/radius-auth-py/`](apps/radius-auth-py/)
 
----
-
-## 🚀 Quick Start
-
-Choose your deployment:
-
-1. **[RevProxAuth (Synology)](#-revproxauth-setup-synology)** - All-in-one with web UI
-2. **[Caddy + radius-auth](#-caddy--radius-auth-setup)** - Automatic HTTPS
-3. **[Traefik + radius-auth](#-traefik--radius-auth-setup)** - Dynamic service discovery
-4. **[Nginx + radius-auth](#-nginx--radius-auth-setup)** - Production stability
 
 ---
 
