@@ -18,10 +18,10 @@ services:
       - ./traefik.yml:/etc/traefik/traefik.yml:ro
       - ./dynamic:/etc/traefik/dynamic:ro
 
-  # Example: Protected application
-  whoami:
-    image: traefik/whoami:latest
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.whoami.rule=Host(`app1.yourdomain.com`)"
-      - "traefik.http.routers.whoami.middlewares=radius-auth"
+  # Example: Protected application (uncomment to use)
+  # whoami:
+  #   image: traefik/whoami:latest
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.whoami.rule=Host(`app1.yourdomain.com`)"
+  #     - "traefik.http.routers.whoami.middlewares=radius-auth"
