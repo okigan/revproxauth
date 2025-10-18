@@ -20,8 +20,8 @@ docker buildx inspect --bootstrap
 
 # Build and push multi-arch image
 docker buildx build --platform linux/amd64,linux/arm64 \
-  -t okigan/synauthproxy:latest \
-  -t okigan/synauthproxy:v0.1.0 \
+  -t okigan/revproxauth:latest \
+  -t okigan/revproxauth:v0.1.0 \
   --push .
 ```
 
@@ -29,32 +29,32 @@ docker buildx build --platform linux/amd64,linux/arm64 \
 
 ```bash
 # Build for your current architecture only
-docker build -t okigan/synauthproxy:latest .
+docker build -t okigan/revproxauth:latest .
 
 # Test locally
 docker run -d \
   -p 9000:9000 \
   -e RADIUS_SERVER=192.168.10.12 \
   -e RADIUS_SECRET=your-secret \
-  okigan/synauthproxy:latest
+  okigan/revproxauth:latest
 
 # Push to Docker Hub
-docker push okigan/synauthproxy:latest
+docker push okigan/revproxauth:latest
 ```
 
 ## Tagging Strategy
 
 ```bash
 # Tag with version
-docker tag okigan/synauthproxy:latest okigan/synauthproxy:v0.1.0
+docker tag okigan/revproxauth:latest okigan/revproxauth:v0.1.0
 
 # Tag with major version
-docker tag okigan/synauthproxy:latest okigan/synauthproxy:v0
+docker tag okigan/revproxauth:latest okigan/revproxauth:v0
 
 # Push all tags
-docker push okigan/synauthproxy:latest
-docker push okigan/synauthproxy:v0.1.0
-docker push okigan/synauthproxy:v0
+docker push okigan/revproxauth:latest
+docker push okigan/revproxauth:v0.1.0
+docker push okigan/revproxauth:v0
 ```
 
 ## Automated Builds with GitHub Actions
@@ -76,11 +76,11 @@ docker-compose -f docker-compose.dev.yml up
 
 ```bash
 # Check image size
-docker images okigan/synauthproxy
+docker images okigan/revproxauth
 
 # Inspect image
-docker inspect okigan/synauthproxy:latest
+docker inspect okigan/revproxauth:latest
 
 # Check for vulnerabilities (optional)
-docker scout cves okigan/synauthproxy:latest
+docker scout cves okigan/revproxauth:latest
 ```

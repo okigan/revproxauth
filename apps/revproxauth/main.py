@@ -39,7 +39,7 @@ class MetricsDict(TypedDict):
 
 
 app = FastAPI(
-    # root_path="/synauthproxy"
+    # root_path="/revproxauth"
 )
 templates = Jinja2Templates(directory="templates")
 
@@ -59,9 +59,9 @@ logging.basicConfig(
 RADIUS_SERVER = os.getenv("RADIUS_SERVER")
 RADIUS_SECRET = os.getenv("RADIUS_SECRET")
 RADIUS_PORT = int(os.getenv("RADIUS_PORT", "1812"))
-RADIUS_NAS_IDENTIFIER = os.getenv("RADIUS_NAS_IDENTIFIER", "synauthproxy")
+RADIUS_NAS_IDENTIFIER = os.getenv("RADIUS_NAS_IDENTIFIER", "revproxauth")
 LOGIN_DOMAIN = os.getenv("LOGIN_DOMAIN")
-ADMIN_USERS = os.getenv("SYNAUTHPROXY_ADMIN_USERS", "").split(",") if os.getenv("SYNAUTHPROXY_ADMIN_USERS") else []
+ADMIN_USERS = os.getenv("REVPROXAUTH_ADMIN_USERS", "").split(",") if os.getenv("REVPROXAUTH_ADMIN_USERS") else []
 
 # JWT / session config
 SESSION_SECRET = os.getenv("SESSION_SECRET", RADIUS_SECRET)
@@ -91,7 +91,7 @@ Required Variables:
   - RADIUS_SECRET: RADIUS shared secret
 
 For setup instructions, see:
-  https://github.com/okigan/synauthproxy#readme
+  https://github.com/okigan/revproxauth#readme
 
 Container cannot start without these variables.
 ================================================================================
@@ -156,12 +156,12 @@ metrics_storage: defaultdict[tuple[str, str], MetricsDict] = defaultdict(
 )
 metrics_lock = Lock()
 
-# Load config from /app/config/synauthproxy.json
+# Load config from /app/config/revproxauth.json
 
 
 def load_config() -> dict[str, Any]:
     try:
-        with open("/app/config/synauthproxy.json") as f:
+        with open("/app/config/revproxauth.json") as f:
             config = json.load(f)
             # Validate version
             if config.get("version") != "1.0":
@@ -180,7 +180,7 @@ def load_mappings():
 def save_mappings(mappings: list[dict[str, Any]]) -> None:
     try:
         config: dict[str, Any] = {"version": "1.0", "mappings": mappings}
-        with open("/app/config/synauthproxy.json", "w") as f:
+        with open("/app/config/revproxauth.json", "w") as f:
             json.dump(config, f, indent=2)
     except Exception as e:
         logging.error(f"Error saving mappings: {str(e)}")
@@ -445,10 +445,10 @@ async def favicon():
     return FileResponse("static/favicon.svg", media_type="image/svg+xml")
 
 
-@app.get("/synauthproxy", response_class=HTMLResponse)
-async def mappings_page(request: Request):
+@app.get("/revproxauth", response_class=HTMLResponse)
+async def read_mappings(request: Request):
     if "auth=authenticated" not in request.headers.get("cookie", ""):
-        login_url = get_login_url(request, "/synauthproxy")
+        login_url = get_login_url(request, "/revproxauth")
         return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
 
     username = get_username_from_cookie(request)
@@ -468,10 +468,10 @@ async def mappings_page(request: Request):
     )
 
 
-@app.get("/synauthproxy/metrics", response_class=HTMLResponse)
-async def metrics_page(request: Request):
+@app.get("/revproxauth/metrics", response_class=HTMLResponse)
+async def show_metrics(request: Request):
     if "auth=authenticated" not in request.headers.get("cookie", ""):
-        login_url = get_login_url(request, "/synauthproxy/metrics")
+        login_url = get_login_url(request, "/revproxauth/metrics")
         return RedirectResponse(url=login_url, status_code=status.HTTP_302_FOUND)
 
     username = get_username_from_cookie(request)
@@ -518,7 +518,7 @@ async def metrics_page(request: Request):
     )
 
 
-@app.post("/synauthproxy/add")
+@app.post("/revproxauth/add")
 async def add_mapping(
     request: Request,
     match_url: str = Form(...),
@@ -548,10 +548,10 @@ async def add_mapping(
     }
     mappings.append(new_mapping)
     save_mappings(mappings)
-    return RedirectResponse(url="/synauthproxy", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(url="/revproxauth", status_code=status.HTTP_303_SEE_OTHER)
 
 
-@app.post("/synauthproxy/update/{index}")
+@app.post("/revproxauth/update/{index}")
 async def update_mapping(
     request: Request,
     index: int,
@@ -582,10 +582,10 @@ async def update_mapping(
             "allowed_groups": allowed_groups_list,
         }
         save_mappings(mappings)
-    return RedirectResponse(url="/synauthproxy", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(url="/revproxauth", status_code=status.HTTP_303_SEE_OTHER)
 
 
-@app.post("/synauthproxy/move/{index}")
+@app.post("/revproxauth/move/{index}")
 async def move_mapping(request: Request, index: int, direction: int = Form(...)):
     if "auth=authenticated" not in request.headers.get("cookie", ""):
         raise HTTPException(status_code=401, detail="Authentication required")
@@ -601,10 +601,10 @@ async def move_mapping(request: Request, index: int, direction: int = Form(...))
             # Swap the mappings
             mappings[index], mappings[new_index] = mappings[new_index], mappings[index]
             save_mappings(mappings)
-    return RedirectResponse(url="/synauthproxy", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(url="/revproxauth", status_code=status.HTTP_303_SEE_OTHER)
 
 
-@app.post("/synauthproxy/delete/{index}")
+@app.post("/revproxauth/delete/{index}")
 async def delete_mapping(request: Request, index: int):
     if "auth=authenticated" not in request.headers.get("cookie", ""):
         raise HTTPException(status_code=401, detail="Authentication required")
@@ -617,7 +617,7 @@ async def delete_mapping(request: Request, index: int):
     if 0 <= index < len(mappings):
         mappings.pop(index)
         save_mappings(mappings)
-    return RedirectResponse(url="/synauthproxy", status_code=status.HTTP_303_SEE_OTHER)
+    return RedirectResponse(url="/revproxauth", status_code=status.HTTP_303_SEE_OTHER)
 
 
 # HTTP proxy handler with WebSocket upgrade support

@@ -1,6 +1,6 @@
 services:
-  synauthproxy:
-    image: okigan/synauthproxy:latest  # Use pre-built image from Docker Hub
+  revproxauth:
+    image: okigan/revproxauth:latest  # Use pre-built image from Docker Hub
     # For local development, uncomment the build section below and comment out the image line:
     # build:
     #   context: .
@@ -11,15 +11,15 @@ services:
                                            # If RADIUS is on the Docker host, use: 172.17.0.1
       RADIUS_SECRET: auth-proxy-secret1    # Change to your RADIUS shared secret
       RADIUS_PORT: 1812
-      RADIUS_NAS_IDENTIFIER: synauthproxy
-      LOGIN_DOMAIN: 192.168.10.137     # Change to your Synology DDNS domain
-      SYNAUTHPROXY_ADMIN_USERS: admin,user1 # Comma-separated admin users (optional)
+      RADIUS_NAS_IDENTIFIER: revproxauth
+      LOGIN_DOMAIN: yourserver.com
+      REVPROXAUTH_ADMIN_USERS: admin,user1 # Comma-separated admin users (optional)
     ports:
       - "9000:9000"
     volumes:
-      - synauthproxy_config:/app/config    # Persistent config storage
+      - revproxauth_config:/app/config    # Persistent config storage
       - /etc/localtime:/etc/localtime:ro
 
 volumes:
-  synauthproxy_config:
+  revproxauth_config:
     driver: local

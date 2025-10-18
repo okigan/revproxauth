@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SynAuthProxy Setup Guide - Synology Container Manager</title>
+    <title>RevProxAuth Setup Guide - Synology Container Manager</title>
     <style>
         * {
             margin: 0;
@@ -273,7 +273,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1><span>🔐</span> SynAuthProxy Setup Guide</h1>
+            <h1><span>🔐</span> RevProxAuth Setup Guide</h1>
             <p>Step-by-step walkthrough for Synology Container Manager</p>
         </div>
 
@@ -287,7 +287,7 @@
                     <div class="carousel-slide">
                         <div class="step-number">1</div>
                         <h2 class="slide-title">Install RADIUS Server</h2>
-                        <div class="slide-description"><p>First, install the RADIUS Server package from Synology Package Center. This provides authentication services for SynAuthProxy.</p>
+                        <div class="slide-description"><p>First, install the RADIUS Server package from Synology Package Center. This provides authentication services for RevProxAuth.</p>
 
 
 
@@ -322,21 +322,21 @@
                         </div>
                     </div>
                     <div class="carousel-slide">
-                        <div class="step-number">3</div>
-                        <h2 class="slide-title">Download SynAuthProxy Image</h2>
-                        <div class="slide-description"><p>Pull the official SynAuthProxy image from Docker Hub.</p>
+                        <span class="step-number">2</span>
+                        <h2 class="slide-title">Download RevProxAuth Image</h2>
+                        <div class="slide-description"><p>Pull the official RevProxAuth image from Docker Hub.</p>
 
 
 <ol>
-<li>In the <strong>Registry</strong> tab, search for: <code>okigan/synauthproxy</code></li>
+<li>In the <strong>Registry</strong> tab, search for: <code>okigan/revproxauth</code></li>
 <li>Click on the result and select <strong>Download</strong></li>
 <li>Choose the <strong>latest</strong> tag</li>
 <li>Wait for the download to complete (check the <strong>Image</strong> tab)</li>
 </ol></div>
                         <div class="slide-image-container">
                             <div class="image-placeholder">
-                                <div class="image-placeholder-icon">🖼️</div>
-                                <div class="image-placeholder-text">Screenshot: Download SynAuthProxy Image</div>
+                                <div class="image-placeholder-icon">�</div>
+                                <div class="image-placeholder-text">Screenshot: Download RevProxAuth Image</div>
                             </div>
                         </div>
                     </div>
@@ -347,10 +347,10 @@
 
 
 <ol>
-<li>Go to the <strong>Container</strong> tab</li>
-<li>Click the downloaded <code>okigan/synauthproxy</code> image</li>
+<li>Go to <strong>Container</strong> tab</li>
+<li>Click the downloaded <code>okigan/revproxauth</code> image</li>
 <li>Click <strong>Launch</strong></li>
-<li>Set Container Name to: <code>synauthproxy</code></li>
+<li>Set Container Name to: <code>revproxauth</code></li>
 <li>Click <strong>Advanced Settings</strong></li>
 </ol></div>
                         <div class="slide-image-container">
@@ -387,9 +387,9 @@
 
 
 <ol>
-<li>Go to <strong>Volume Settings</strong> tab</li>
+<li>Navigate to <strong>Volume Settings</strong> tab</li>
 <li>Click <strong>Add Folder</strong></li>
-<li>Create new folder: <code>/docker/synauthproxy/config</code></li>
+<li>Create new folder: <code>/docker/revproxauth/config</code></li>
 <li>Mount path: <code>/app/config</code></li>
 </ol></div>
                         <div class="slide-image-container">
@@ -405,13 +405,12 @@
                         <div class="slide-description"><p>Configure the essential settings. The container will show these variables - you just need to fill in the values!</p>
 
 
-<ul>
-<li>RADIUS_SERVER=172.17.0.1   # Docker host IP (use if RADIUS is on same NAS)</li>
-<li>RADIUS_SECRET=your-secret-here   # From RADIUS Server configuration</li>
-<li>RADIUS_PORT=1812   # Default RADIUS port</li>
-<li>LOGIN_DOMAIN=https://nas.example.com:9000   # Your full domain URL with protocol</li>
-<li>SYNAUTHPROXY_ADMIN_USERS=admin   # Optional: comma-separated admin usernames</li>
-</ul></div>
+<li>RADIUS_SERVER=172.17.0.1</li>
+<li>RADIUS_SECRET=your-secret-here</li>
+<li>RADIUS_PORT=1812</li>
+<li>REVPROXAUTH_ADMIN_USERS=admin   # Optional: comma-separated admin usernames</li>
+<li>LOGIN_DOMAIN=yourdomain.com</li>
+</ol></div>
                         <div class="slide-image-container">
                             <div class="image-placeholder">
                                 <div class="image-placeholder-icon">🖼️</div>
@@ -429,7 +428,10 @@
 <li>Click <strong>Apply</strong> then <strong>Done</strong></li>
 <li>The container will start automatically</li>
 <li>Check logs to verify it started successfully</li>
-<li>You should see: <code>SynAuthProxy Starting</code> with your configuration</li>
+<li>Wait for container to start</li>
+<li>You should see: <code>RevProxAuth Starting</code> with your configuration</li>
+</ol>
+</div>
 </ol>
 
 
@@ -444,7 +446,7 @@
                     <div class="carousel-slide">
                         <div class="step-number">9</div>
                         <h2 class="slide-title">Configure Reverse Proxy</h2>
-                        <div class="slide-description"><p>Set up Synology's built-in reverse proxy to route traffic through SynAuthProxy.</p>
+                        <div class="slide-description"><p>Set up Synology's built-in reverse proxy to route traffic through RevProxAuth.</p>
 
 
 <ol>
@@ -465,14 +467,14 @@
                     <div class="carousel-slide">
                         <div class="step-number">10</div>
                         <h2 class="slide-title">Setup Complete 🎉</h2>
-                        <div class="slide-description"><p>Your SynAuthProxy is now ready to use!</p>
+                        <div class="slide-description"><p>Your RevProxAuth is now ready to use!</p>
 
 
 <p>Next Steps:</p>
 
 
 <ol>
-<li>Visit <code>https://yourdomain.com/synauthproxy</code></li>
+<li>Visit <code>https://yourdomain.com/revproxauth</code></li>
 <li>Log in with your Synology credentials</li>
 <li>Add your first application mapping</li>
 <li>Start using centralized authentication!</li>
@@ -501,7 +503,7 @@
         </div>
 
         <div class="footer">
-            Need help? Check the <a href="https://github.com/okigan/synauthproxy#readme" target="_blank">README</a> or open an <a href="https://github.com/okigan/synauthproxy/issues" target="_blank">issue on GitHub</a>
+            Need help? Check the <a href="https://github.com/okigan/revproxauth#readme" target="_blank">README</a> or open an <a href="https://github.com/okigan/revproxauth/issues" target="_blank">issue on GitHub</a>
         </div>
     </div>
 

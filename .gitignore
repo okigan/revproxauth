@@ -1,4 +1,2 @@
-synauthproxy/__pycache__/main.cpython-312.pyc
-synauthproxy/dictionary
-__pycache__/main.cpython-312.pyc
-synauthproxy.log
+**/__pycache__/
+**/*.log

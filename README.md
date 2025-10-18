@@ -1,11 +1,11 @@
-# 🔐 SynAuthProxy
+# 🔐 RevProxAuth
 
 > **Centralized authentication proxy for Synology NAS** - Secure your self-hosted apps with RADIUS authentication and elegant management UI
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com/)
-[![Lint](https://github.com/okigan/synauthproxy/actions/workflows/lint.yml/badge.svg)](https://github.com/okigan/synauthproxy/actions/workflows/lint.yml)
+[![Lint](https://github.com/okigan/revproxauth/actions/workflows/lint.yml/badge.svg)](https://github.com/okigan/revproxauth/actions/workflows/lint.yml)
 [![Sponsor](https://img.shields.io/badge/Sponsor-❤-ff69b4.svg)](https://github.com/sponsors/okigan)
 
 ---
@@ -22,7 +22,7 @@ You have multiple self-hosted applications (Docker containers, internal services
 
 ## ✨ The Solution
 
-**SynAuthProxy** sits between your Synology reverse proxy and your applications, providing:
+**RevProxAuth** sits between your Synology reverse proxy and your applications, providing:
 
 - ✅ **Single Sign-On** - Use your existing Synology user accounts
 - ✅ **Centralized Management** - One place to control all app routing
@@ -34,7 +34,7 @@ You have multiple self-hosted applications (Docker containers, internal services
 
 ---
 
-![SynAuthProxy Management UI](docs/images/image.png)
+![RevProxAuth Management UI](docs/images/image.png)
 
 ---
 
@@ -52,7 +52,7 @@ graph TB
             RADIUS[🔑 RADIUS Server<br/>Port 1812<br/>User Database]
             
             subgraph Docker["🐳 Docker"]
-                SynAuth[🔐 SynAuthProxy<br/>Port 9000<br/>Auth & Routing]
+                SynAuth[🔐 RevProxAuth<br/>Port 9000<br/>Auth & Routing]
                 App1[📦 Docker App<br/>localhost:8080]
             end
         end
@@ -97,8 +97,8 @@ graph TB
 
 1. **Client** makes HTTPS request to `app.mysynology.com`
 2. **DNS** resolves to your Synology NAS public IP
-3. **Synology Reverse Proxy** (running on NAS) terminates SSL using a certificate that includes `*.mysynology.me` as a Subject Alternative Name (SAN) and forwards to SynAuthProxy container
-4. **SynAuthProxy** (Docker container on NAS) checks authentication:
+3. **Synology Reverse Proxy** (running on NAS) terminates SSL using a certificate that includes `*.mysynology.me` as a Subject Alternative Name (SAN) and forwards to RevProxAuth container
+4. **RevProxAuth** (Docker container on NAS) checks authentication:
    - If not logged in → Show login page
    - Validate credentials via **RADIUS server** (running on NAS)
    - RADIUS verifies against Synology user database
@@ -122,9 +122,9 @@ graph TB
 
 ### 📖 Interactive Setup Guide
 
-**New to SynAuthProxy?** Follow our step-by-step visual guide:
+**New to RevProxAuth?** Follow our step-by-step visual guide:
 
-👉 **[Open Interactive Setup Walkthrough](https://okigan.github.io/synauthproxy/setup-guide.html)** 👈
+👉 **[Open Interactive Setup Walkthrough](https://okigan.github.io/revproxauth/setup-guide.html)** 👈
 
 Or follow the manual installation steps below:
 
@@ -153,20 +153,20 @@ Configure RADIUS:
 - Set shared secret (e.g., `your-secret-here`)
 - Add client: `127.0.0.1` with the same secret
 
-### 2. Deploy SynAuthProxy
+### 2. Deploy RevProxAuth
 
 #### 🎯 Method 1: Synology Container Manager GUI (Recommended)
 
 1. **Download Image from Docker Hub**
    - Open Container Manager on your Synology
    - Go to **Registry** tab
-   - Search for `okigan/synauthproxy`
+   - Search for `okigan/revproxauth`
    - Click **Download** and select `latest` tag
 
 2. **Launch Container**
    - Go to **Container** tab
    - Click downloaded image → **Launch**
-   - Container Name: `synauthproxy`
+   - Container Name: `revproxauth`
 
 3. **Configure Port Settings**
    - Click **Advanced Settings**
@@ -176,7 +176,7 @@ Configure RADIUS:
 4. **Configure Volume (for persistent config)**
    - **Volume Settings** tab
    - Click **Add Folder**
-   - Create/Select: `/docker/synauthproxy/config`
+   - Create/Select: `/docker/revproxauth/config`
    - Mount path: `/app/config`
 
 5. **Configure Environment Variables**
@@ -193,8 +193,8 @@ Configure RADIUS:
      **Optional Variables:**
      ```
      RADIUS_PORT=1812                     # Default: 1812
-     RADIUS_NAS_IDENTIFIER=synauthproxy   # Default: synauthproxy
-     SYNAUTHPROXY_ADMIN_USERS=admin,user1 # Comma-separated admin users (empty = all users can edit)
+     RADIUS_NAS_IDENTIFIER=revproxauth    # Default: revproxauth
+     REVPROXAUTH_ADMIN_USERS=admin,user1  # Comma-separated admin users (empty = all users can edit)
      ```
    
    💡 **Connecting to RADIUS Server on Synology Host:**
@@ -212,10 +212,10 @@ Configure RADIUS:
 
 ```bash
 # Create directory
-mkdir -p ~/synauthproxy && cd ~/synauthproxy
+mkdir -p ~/revproxauth && cd ~/revproxauth
 
 # Download docker-compose.yml
-wget https://raw.githubusercontent.com/okigan/synauthproxy/main/docker-compose.yml
+wget https://raw.githubusercontent.com/okigan/revproxauth/main/docker-compose.revproxauth.yml
 
 # Edit with your settings
 nano docker-compose.yml
@@ -239,7 +239,7 @@ Create rules for each subdomain:
 
 ### 4. Configure Mappings
 
-Visit `https://yourdomain.com/synauthproxy` and add your apps:
+Visit `https://yourdomain.com/revproxauth` and add your apps:
 
 | Match URL | Destination | Flags |
 |-----------|-------------|-------|
@@ -259,9 +259,9 @@ Visit `https://yourdomain.com/synauthproxy` and add your apps:
 | `RADIUS_SERVER` | ✅ Yes | - | RADIUS server IP/hostname (usually `127.0.0.1`) |
 | `RADIUS_SECRET` | ✅ Yes | - | RADIUS shared secret |
 | `RADIUS_PORT` | No | `1812` | RADIUS server port |
-| `RADIUS_NAS_IDENTIFIER` | No | `synauthproxy` | NAS identifier sent to RADIUS |
+| `RADIUS_NAS_IDENTIFIER` | No | `revproxauth` | NAS identifier sent to RADIUS |
 | `LOGIN_DOMAIN` | No | - | Domain for login redirects |
-| `SYNAUTHPROXY_ADMIN_USERS` | No | - | Comma-separated admin usernames (empty = all users are admins) |
+| `REVPROXAUTH_ADMIN_USERS` | No | - | Comma-separated admin usernames (empty = all users are admins) |
 
 ### Docker Compose Example
 
@@ -270,7 +270,7 @@ Visit `https://yourdomain.com/synauthproxy` and add your apps:
 
 ```yaml
 services:
-  synauthproxy:
+  revproxauth:
     build:
       context: .
       dockerfile: Dockerfile
@@ -279,9 +279,9 @@ services:
       RADIUS_SERVER: 127.0.0.1
       RADIUS_SECRET: your-secret-here
       RADIUS_PORT: 1812
-      RADIUS_NAS_IDENTIFIER: synauthproxy
+      RADIUS_NAS_IDENTIFIER: revproxauth
       LOGIN_DOMAIN: yourdomain.com
-      # SYNAUTHPROXY_ADMIN_USERS: admin,user1  # Optional
+      # REVPROXAUTH_ADMIN_USERS: admin,user1  # Optional
     ports:
       - "9000:9000"
     volumes:
@@ -291,7 +291,7 @@ services:
 
 ### Mappings Configuration
 
-Edit `config/synauthproxy.json` or use the web UI at `https://yourdomain.com/synauthproxy`:
+Edit `config/revproxauth.json` or use the web UI at `https://yourdomain.com/revproxauth`:
 
 ```json
 {
@@ -329,7 +329,7 @@ Edit `config/synauthproxy.json` or use the web UI at `https://yourdomain.com/syn
 
 ### 🔄 Automatic WebSocket Upgrades
 
-No special configuration needed! SynAuthProxy detects `Upgrade: websocket` headers and:
+No special configuration needed! RevProxAuth detects `Upgrade: websocket` headers and:
 - ✅ Establishes WebSocket connection to backend
 - ✅ Forwards handshake headers
 - ✅ Proxies messages bidirectionally
@@ -348,7 +348,7 @@ Forward:   http://backend/users
 ### 👥 Admin Management
 
 - **View Mappings** - All authenticated users can view
-- **Edit Mappings** - Only admin users (set via `SYNAUTHPROXY_ADMIN_USERS`)
+- **Edit Mappings** - Only admin users (set via `REVPROXAUTH_ADMIN_USERS`)
 - **Web UI** - Inline editing, drag-to-reorder, enable/disable toggles
 
 ### 🎯 Management UI
@@ -366,7 +366,7 @@ Forward:   http://backend/users
 - Verify RADIUS server is running: Synology → RADIUS Server
 - Check shared secret matches in both places
 - Ensure user exists in Synology (Control Panel → User & Group)
-- Check logs: `docker logs synauthproxy`
+- Check logs: `docker logs revproxauth`
 
 ### Reverse Proxy Not Working
 - Verify reverse proxy rule points to port `9000`
@@ -385,8 +385,8 @@ Forward:   http://backend/users
 
 ```bash
 # Clone the repository
-git clone https://github.com/okigan/synauthproxy.git
-cd synauthproxy
+git clone https://github.com/okigan/revproxauth.git
+cd revproxauth
 
 # Install dependencies (using uv)
 uv sync
@@ -444,7 +444,7 @@ docker-compose up --build
 ### Project Structure
 
 ```
-synauthproxy/
+revproxauth/
 ├── main.py              # Main FastAPI application
 ├── config/              # Configuration files
 ├── templates/           # Jinja2 HTML templates
@@ -472,7 +472,7 @@ sudo sh -c 'echo "192.168.1.100 myapp" >> /etc/hosts'
 ```
 
 Then update the backend URLs in config files:
-- **SynAuthProxy**: `apps/synauthproxy/config/synauthproxy.json` - change `http_dest`
+- **RevProxAuth**: `apps/revproxauth/config/revproxauth.json` - change `http_dest`
 - **nginx**: `apps/nginx/config/default.conf` - change `proxy_pass` URLs
 - **Traefik**: `apps/traefik/dynamic/py-radius-auth.yml` - change service URL
 - **Caddy**: `apps/caddy/Caddyfile` - change `reverse_proxy`
@@ -486,7 +486,7 @@ services:
   myapp:
     image: my-test-image
     networks:
-      - synauthproxy-network
+      - revproxauth-network
       - nginx-network
       - traefik-network
       - caddy-network
@@ -509,7 +509,7 @@ BACKEND_HOST=nvbox BACKEND_PORT=8080 make up-nginx
 After configuration, test each proxy:
 
 ```bash
-# SynAuthProxy
+# RevProxAuth
 curl -I http://localhost:9000
 
 # nginx

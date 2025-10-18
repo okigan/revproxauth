@@ -31,7 +31,6 @@ Thumbs.db
 
 # Logs
 *.log
-synauthproxy.log
 
 # Documentation
 doc/

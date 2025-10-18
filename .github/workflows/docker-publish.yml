@@ -13,7 +13,7 @@ on:
 
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: okigan/synauthproxy
+  IMAGE_NAME: okigan/revproxauth
 
 jobs:
   lint:
@@ -35,17 +35,17 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd apps/synauthproxy
+          cd apps/revproxauth
           uv sync
 
       - name: Run ruff check
         run: |
-          cd apps/synauthproxy
+          cd apps/revproxauth
           uv run ruff check .
 
       - name: Run ruff format check
         run: |
-          cd apps/synauthproxy
+          cd apps/revproxauth
           uv run ruff format --check .
 
   build-and-push:
@@ -90,7 +90,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: ./apps/synauthproxy
+          context: ./apps/revproxauth
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}

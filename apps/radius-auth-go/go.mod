@@ -1,4 +1,4 @@
-module github.com/okigan/synauthproxy/go-radius-auth
+module github.com/okigan/revproxauth/radius-auth-go
 
 go 1.21
 

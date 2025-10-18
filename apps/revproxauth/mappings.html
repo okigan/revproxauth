@@ -193,7 +193,7 @@
         {% if unrestricted_access %}
         <p style="color: #d84b4b; margin-bottom: 20px; padding: 12px; background: #fff9e6; border-radius: 3px; border: 1px solid #f5a623; display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 18px;">⚠️</span>
-            <span><strong>Security Warning:</strong> Mapping editing is unrestricted! All authenticated users can modify mappings. Set <code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 2px; font-family: monospace;">SYNAUTHPROXY_ADMIN_USERS</code> environment variable to restrict access.</span>
+            <span><strong>Security Warning:</strong> Mapping editing is unrestricted! All authenticated users can modify mappings. Set <code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 2px; font-family: monospace;">REVPROXAUTH_ADMIN_USERS</code> environment variable to restrict access.</span>
         </p>
         {% endif %}
         {% if username and not is_admin %}
@@ -258,7 +258,7 @@
                                 {% if is_admin %}
                                 <button class="save-btn" id="save-{{ loop.index0 }}"
                                     onclick="saveMapping({{ loop.index0 }})">Save</button>
-                                <form method="post" action="/synauthproxy/delete/{{ loop.index0 }}"
+                                <form method="post" action="/revproxauth/delete/{{ loop.index0 }}"
                                     style="margin: 0; display: inline;">
                                     <button type="submit" class="delete-btn"
                                         onclick="return confirm('Delete this mapping?')">Delete</button>
@@ -379,7 +379,7 @@
 
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = `/synauthproxy/update/${index}`;
+            form.action = `/revproxauth/update/${index}`;
 
             for (const [key, value] of Object.entries(data)) {
                 const input = document.createElement('input');
@@ -413,7 +413,7 @@
 
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '/synauthproxy/add';
+            form.action = '/revproxauth/add';
 
             const fields = { match_url, http_dest, flags: flags.join(','), allowed_users: allowed_users, allowed_groups: allowed_groups };
             for (const [key, value] of Object.entries(fields)) {
@@ -431,7 +431,7 @@
         function moveMapping(index, direction) {
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = `/synauthproxy/move/${index}`;
+            form.action = `/revproxauth/move/${index}`;
 
             const dirInput = document.createElement('input');
             dirInput.type = 'hidden';

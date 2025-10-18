@@ -1,6 +1,6 @@
-# SynAuthProxy Stack
+# RevProxAuth Stack
 
-This is the **original SynAuthProxy solution** - a Python FastAPI application that provides RADIUS-based authentication with a beautiful management UI.
+This is the **original RevProxAuth solution** - a Python FastAPI application that provides RADIUS-based authentication with a beautiful management UI.
 
 ## Features
 
@@ -17,7 +17,7 @@ This is the **original SynAuthProxy solution** - a Python FastAPI application th
 ## Architecture
 
 ```
-Client → SynAuthProxy → RADIUS → Backend App
+Client → RevProxAuth → RADIUS → Backend App
          (FastAPI)
 ```
 
@@ -37,13 +37,13 @@ All functionality is in a single service:
 | `RADIUS_SERVER` | ✅ Yes | - | RADIUS server IP/hostname |
 | `RADIUS_SECRET` | ✅ Yes | - | RADIUS shared secret |
 | `RADIUS_PORT` | No | `1812` | RADIUS server port |
-| `RADIUS_NAS_IDENTIFIER` | No | `synauthproxy` | NAS identifier |
+| `RADIUS_NAS_IDENTIFIER` | No | `revproxauth` | NAS identifier |
 | `LOGIN_DOMAIN` | No | - | Domain for login redirects |
-| `SYNAUTHPROXY_ADMIN_USERS` | No | - | Comma-separated admin usernames |
+| `REVPROXAUTH_ADMIN_USERS` | No | - | Comma-separated admin usernames |
 
 ### Mappings Configuration
 
-Edit `config/synauthproxy.json` or use the web UI at `/synauthproxy`:
+Edit `config/revproxauth.json` or use the web UI at `/revproxauth`:
 
 ```json
 {
@@ -69,25 +69,25 @@ Edit `config/synauthproxy.json` or use the web UI at `/synauthproxy`:
 From the project root:
 
 ```bash
-docker-compose -f docker-compose.synauthproxy.yml up
+docker-compose -f docker-compose.revproxauth.yml up
 ```
 
 Or run just this stack (with external RADIUS):
 
 ```bash
-cd apps/synauthproxy
-docker build -t synauthproxy .
+cd apps/revproxauth
+docker build -t revproxauth .
 docker run -p 9000:9000 \
   -e RADIUS_SERVER=your-radius-server \
   -e RADIUS_SECRET=your-secret \
-  synauthproxy
+  revproxauth
 ```
 
 ## Access
 
 - **Main proxy:** http://localhost:9000
-- **Management UI:** http://localhost:9000/synauthproxy
-- **Metrics:** http://localhost:9000/synauthproxy/metrics
+- **Management UI:** http://localhost:9000/revproxauth
+- **Metrics:** http://localhost:9000/revproxauth/metrics
 - **Login:** http://localhost:9000/login
 
 ## Development
@@ -121,7 +121,7 @@ make lint
 ## Security
 
 - **Authentication:** RADIUS-based with session cookies
-- **Admin Access:** Configurable via `SYNAUTHPROXY_ADMIN_USERS`
+- **Admin Access:** Configurable via `REVPROXAUTH_ADMIN_USERS`
 - **Authorization:** Per-mapping user/group restrictions via JWT tokens
 - **Sessions:** Stateless JWT with expiration
 

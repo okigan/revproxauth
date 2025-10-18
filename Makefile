@@ -1,26 +1,26 @@
-# Makefile for SynAuthProxy - Multi-stack authentication proxy
+# Makefile for RevProxAuth - Multi-stack authentication proxy
 
-.PHONY: all help up-synauthproxy up-nginx up-traefik up-caddy up-all down-all clean-all logs serve-guide lint format lint-check install-hooks
+.PHONY: all help up-revproxauth up-nginx up-traefik up-caddy up-all down-all clean-all logs serve-guide lint format lint-check install-hooks
 
 # Default target
 all: help
 
 # Show help
 help:
-	@echo "🔐 SynAuthProxy - Multi-Stack Authentication Proxy"
+	@echo "🔐 RevProxAuth - Multi-Stack Authentication Proxy"
 	@echo ""
 	@echo "Available Stacks:"
-	@echo "  make up-synauthproxy    - Start SynAuthProxy stack (Python FastAPI)"
+	@echo "  make up-revproxauth     - Start RevProxAuth stack (Python FastAPI)"
 	@echo "  make up-nginx           - Start nginx stack (nginx + auth backend)"
 	@echo "  make up-traefik         - Start Traefik stack (Traefik + ForwardAuth)"
 	@echo "  make up-caddy           - Start Caddy stack (Caddy + forward_auth)"
 	@echo "  make up-all             - Start all stacks simultaneously"
-	@echo "  make dev                - Start SynAuthProxy in development mode (live reload)"
+	@echo "  make dev                - Start RevProxAuth in development mode (live reload)"
 	@echo ""
 	@echo "Management:"
 	@echo "  make down-all           - Stop all running stacks"
 	@echo "  make clean-all          - Stop and remove all containers, images, volumes"
-	@echo "  make logs-synauthproxy  - View SynAuthProxy logs"
+	@echo "  make logs-revproxauth   - View RevProxAuth logs"
 	@echo "  make logs-nginx         - View nginx stack logs"
 	@echo "  make logs-traefik       - View Traefik stack logs"
 	@echo "  make logs-caddy         - View Caddy stack logs"
@@ -36,21 +36,20 @@ help:
 	@echo "  make build-guide        - Build HTML setup guide"
 	@echo ""
 	@echo "Access URLs:"
-	Access URLs:
-	@echo "  SynAuthProxy:  http://localhost:9000 (RADIUS: 9001)"
+	@echo "  RevProxAuth:   http://localhost:9000 (RADIUS: 9001)"
 	@echo "  nginx:         http://localhost:9010 (RADIUS: 9011)"
 	@echo "  Traefik:       http://localhost:9020 (Dashboard: 9021, RADIUS: 9022)"
 	@echo "  Caddy:         http://localhost:9030 (RADIUS: 9031)"
 
-# Start SynAuthProxy stack
-up-synauthproxy:
-	@echo "🚀 Starting SynAuthProxy stack..."
-	docker-compose -p synauthproxy -f docker-compose.synauthproxy.yml up -d --build
+# Start RevProxAuth stack
+up-revproxauth:
+	@echo "🚀 Starting RevProxAuth stack..."
+	docker-compose -p revproxauth -f docker-compose.revproxauth.yml up -d --build
 
-# Start SynAuthProxy in development mode (with live reload)
+# Start RevProxAuth in development mode (with live reload)
 dev:
-	@echo "🚀 Starting SynAuthProxy in development mode..."
-	docker-compose -p synauthproxy -f docker-compose.dev.yml up --build
+	@echo "🚀 Starting RevProxAuth in development mode..."
+	docker-compose -p revproxauth -f docker-compose.dev.yml up --build
 
 # Start nginx stack
 up-nginx:
@@ -70,8 +69,8 @@ up-caddy:
 # Start all stacks
 up-all: down-all
 	@echo "🚀 Starting all stacks..."
-	@echo "📦 Starting SynAuthProxy stack..."
-	@docker-compose -p synauthproxy -f docker-compose.synauthproxy.yml up -d --build
+	@echo "📦 Starting RevProxAuth stack..."
+	@docker-compose -p revproxauth -f docker-compose.revproxauth.yml up -d --build
 	@echo "📦 Starting nginx stack..."
 	@docker-compose -p nginx -f docker-compose.nginx.yml up -d --build
 	@echo "📦 Starting Traefik stack..."
@@ -82,7 +81,7 @@ up-all: down-all
 	@echo "✅ All stacks started successfully!"
 	@echo ""
 	@echo "Access URLs:"
-	@echo "  SynAuthProxy:  http://localhost:9000 (RADIUS: 9001)"
+	@echo "  RevProxAuth:   http://localhost:9000 (RADIUS: 9001)"
 	@echo "  nginx:         http://localhost:9010 (RADIUS: 9011)"
 	@echo "  Traefik:       http://localhost:9020 (Dashboard: 9021, RADIUS: 9022)"
 	@echo "  Caddy:         http://localhost:9030 (RADIUS: 9031)"
@@ -90,31 +89,31 @@ up-all: down-all
 # Stop all stacks
 down-all:
 	@echo "🛑 Stopping all stacks..."
-	-docker-compose -p synauthproxy -f docker-compose.synauthproxy.yml down --remove-orphans 2>/dev/null || true
+	-docker-compose -p revproxauth -f docker-compose.revproxauth.yml down --remove-orphans 2>/dev/null || true
 	-docker-compose -p nginx -f docker-compose.nginx.yml down --remove-orphans 2>/dev/null || true
 	-docker-compose -p traefik -f docker-compose.traefik.yml down --remove-orphans 2>/dev/null || true
 	-docker-compose -p caddy -f docker-compose.caddy.yml down --remove-orphans 2>/dev/null || true
-	-docker-compose -p synauthproxy -f docker-compose.dev.yml down --remove-orphans 2>/dev/null || true
+	-docker-compose -p revproxauth -f docker-compose.dev.yml down --remove-orphans 2>/dev/null || true
 	@echo "🧹 Removing any orphaned containers..."
-	-docker container rm -f nginx nginx-radius nginx-py-radius-auth nginx-whoami 2>/dev/null || true
-	-docker container rm -f traefik traefik-radius traefik-py-radius-auth traefik-whoami 2>/dev/null || true
-	-docker container rm -f caddy caddy-radius caddy-py-radius-auth caddy-whoami 2>/dev/null || true
-	-docker container rm -f synauthproxy synauthproxy-radius synauthproxy-whoami 2>/dev/null || true
+	-docker container rm -f nginx nginx-radius nginx-radius-auth-py nginx-whoami 2>/dev/null || true
+	-docker container rm -f traefik traefik-radius traefik-radius-auth-go traefik-whoami 2>/dev/null || true
+	-docker container rm -f caddy caddy-radius caddy-radius-auth-go caddy-whoami 2>/dev/null || true
+	-docker container rm -f revproxauth revproxauth-radius revproxauth-whoami 2>/dev/null || true
 
-up-all: down-all up-synauthproxy up-nginx up-traefik up-caddy
+up-all: down-all up-revproxauth up-nginx up-traefik up-caddy
 
 # Clean up all stacks
 clean-all:
 	@echo "🧹 Cleaning up all stacks..."
-	-docker-compose -p synauthproxy -f docker-compose.synauthproxy.yml down --rmi all --volumes --remove-orphans 2>/dev/null || true
+	-docker-compose -p revproxauth -f docker-compose.revproxauth.yml down --rmi all --volumes --remove-orphans 2>/dev/null || true
 	-docker-compose -p nginx -f docker-compose.nginx.yml down --rmi all --volumes --remove-orphans 2>/dev/null || true
 	-docker-compose -p traefik -f docker-compose.traefik.yml down --rmi all --volumes --remove-orphans 2>/dev/null || true
 	-docker-compose -p caddy -f docker-compose.caddy.yml down --rmi all --volumes --remove-orphans 2>/dev/null || true
-	-docker-compose -p synauthproxy -f docker-compose.dev.yml down --rmi all --volumes --remove-orphans 2>/dev/null || true
+	-docker-compose -p revproxauth -f docker-compose.dev.yml down --rmi all --volumes --remove-orphans 2>/dev/null || true
 
 # View logs for specific stacks
-logs-synauthproxy:
-	docker-compose -p synauthproxy -f docker-compose.synauthproxy.yml logs -f
+logs-revproxauth:
+	docker-compose -p revproxauth -f docker-compose.revproxauth.yml logs -f
 
 logs-nginx:
 	docker-compose -p nginx -f docker-compose.nginx.yml logs -f
@@ -140,25 +139,25 @@ build-guide:
 # Run ruff linter and formatter
 lint:
 	@echo "🔍 Running ruff check..."
-	cd apps/synauthproxy && uv run ruff check . --fix
+	cd apps/revproxauth && uv run ruff check . --fix
 	@echo "✨ Running ruff format..."
-	cd apps/synauthproxy && uv run ruff format .
+	cd apps/revproxauth && uv run ruff format .
 	@echo "🔬 Running pyright type checker..."
-	cd apps/synauthproxy && uv run pyright
+	cd apps/revproxauth && uv run pyright
 
 # Check linting without making changes
 lint-check:
 	@echo "🔍 Running ruff check..."
-	cd apps/synauthproxy && uv run ruff check .
+	cd apps/revproxauth && uv run ruff check .
 	@echo "✨ Running ruff format check..."
-	cd apps/synauthproxy && uv run ruff format --check .
+	cd apps/revproxauth && uv run ruff format --check .
 	@echo "🔬 Running pyright type checker..."
-	cd apps/synauthproxy && uv run pyright
+	cd apps/revproxauth && uv run pyright
 
 # Format code with ruff
 format:
 	@echo "✨ Formatting code with ruff..."
-	cd apps/synauthproxy && uv run ruff format .
+	cd apps/revproxauth && uv run ruff format .
 
 # Install git pre-commit hook
 install-hooks:
@@ -166,19 +165,19 @@ install-hooks:
 	@mkdir -p .git/hooks
 	@echo '#!/bin/sh' > .git/hooks/pre-commit
 	@echo 'echo "🔍 Running ruff linter..."' >> .git/hooks/pre-commit
-	@echo 'cd apps/synauthproxy && uv run ruff check . --fix' >> .git/hooks/pre-commit
+	@echo 'cd apps/revproxauth && uv run ruff check . --fix' >> .git/hooks/pre-commit
 	@echo 'if [ $$? -ne 0 ]; then' >> .git/hooks/pre-commit
 	@echo '  echo "❌ Ruff check failed. Please fix the issues and try again."' >> .git/hooks/pre-commit
 	@echo '  exit 1' >> .git/hooks/pre-commit
 	@echo 'fi' >> .git/hooks/pre-commit
 	@echo 'echo "✨ Running ruff formatter..."' >> .git/hooks/pre-commit
-	@echo 'cd apps/synauthproxy && uv run ruff format .' >> .git/hooks/pre-commit
+	@echo 'cd apps/revproxauth && uv run ruff format .' >> .git/hooks/pre-commit
 	@echo 'if [ $$? -ne 0 ]; then' >> .git/hooks/pre-commit
 	@echo '  echo "❌ Ruff format failed. Please fix the issues and try again."' >> .git/hooks/pre-commit
 	@echo '  exit 1' >> .git/hooks/pre-commit
 	@echo 'fi' >> .git/hooks/pre-commit
 	@echo 'echo "🔬 Running pyright type checker..."' >> .git/hooks/pre-commit
-	@echo 'cd apps/synauthproxy && uv run pyright' >> .git/hooks/pre-commit
+	@echo 'cd apps/revproxauth && uv run pyright' >> .git/hooks/pre-commit
 	@echo 'if [ $$? -ne 0 ]; then' >> .git/hooks/pre-commit
 	@echo '  echo "❌ Type check failed. Please fix the issues and try again."' >> .git/hooks/pre-commit
 	@echo '  exit 1' >> .git/hooks/pre-commit

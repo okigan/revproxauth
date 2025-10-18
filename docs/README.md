@@ -1,9 +1,9 @@
 # GitHub Pages Setup
 
-This directory contains the interactive setup guide for SynAuthProxy.
+This directory contains the interactive setup guide for RevProxAuth.
 
 The setup guide is hosted via GitHub Pages at:
-https://okigan.github.io/synauthproxy/setup-guide.html
+https://okigan.github.io/revproxauth/setup-guide.html
 
 ## To Enable GitHub Pages:
 

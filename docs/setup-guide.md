@@ -1,4 +1,4 @@
-# SynAuthProxy Setup Guide
+# RevProxAuth Setup Guide
 
 Step-by-step walkthrough for Synology Container Manager
 
@@ -6,7 +6,7 @@ Step-by-step walkthrough for Synology Container Manager
 
 ## 1. Install RADIUS Server
 
-First, install the RADIUS Server package from Synology Package Center. This provides authentication services for SynAuthProxy.
+First, install the RADIUS Server package from Synology Package Center. This provides authentication services for RevProxAuth.
 
 ![RADIUS Server Installation](images/image.png)
 
@@ -39,21 +39,21 @@ Use File Station to create the project structure.
 
 1. Open **File Station**
 2. Navigate to `/docker` (create this folder if it doesn't exist)
-3. Create new folder: `synauthproxy`
-4. Inside `synauthproxy`, create folder: `config`
+3. Create new folder: `revproxauth`
+4. Inside `revproxauth`, create folder: `config`
 
 ### 4A. Create docker-compose.yml
 
 Create the Docker Compose configuration file.
 
-1. Inside `/docker/synauthproxy`, create a new file named `docker-compose.yml`
+1. Inside `/docker/revproxauth`, create a new file named `docker-compose.yml`
 2. Copy the following content and **replace all EXAMPLE values**:
 
 ```yaml
 services:
-  synauthproxy:
-    image: okigan/synauthproxy:latest
-    container_name: synauthproxy
+  revproxauth:
+    image: okigan/revproxauth:latest
+    container_name: revproxauth
     ports:
       - "9000:9000"
     environment:
@@ -65,8 +65,8 @@ services:
       
       # OPTIONAL: Adjust these if needed
       - RADIUS_PORT=1812                      # Default RADIUS port (usually no change needed)
-      - RADIUS_NAS_IDENTIFIER=synauthproxy    # NAS identifier (usually no change needed)
-      - SYNAUTHPROXY_ADMIN_USERS=admin        # EXAMPLE: Comma-separated admin usernames (e.g., admin,john)
+      - RADIUS_NAS_IDENTIFIER=revproxauth     # NAS identifier (usually no change needed)
+      - REVPROXAUTH_ADMIN_USERS=admin         # EXAMPLE: Comma-separated admin usernames (e.g., admin,john)
                                                # Leave empty to allow all users to edit mappings
       
       # OPTIONAL: Logging configuration
@@ -75,8 +75,8 @@ services:
       - UV_NO_PROGRESS=1                      # Suppress progress bars in logs
     restart: unless-stopped
     volumes:
-      - /volume1/docker/synauthproxy/config:/app/config  # Persistent config storage
-                                                          # Adjust /volume1 to your volume name if different
+      - /volume1/docker/revproxauth/config:/app/config  # Persistent config storage
+                                                         # Adjust /volume1 to your volume name if different
 ```
 
 ### 5A. Create Project in Container Manager
@@ -86,21 +86,23 @@ Set up the project in Container Manager.
 1. Open **Container Manager**
 2. Go to **Project** tab
 3. Click **Create**
-4. Project Name: `synauthproxy`
-5. Path: Browse and select `/docker/synauthproxy`
+4. Project Name: `revproxauth`
+5. Path: Browse and select `/docker/revproxauth`
 6. Source: `Use existing docker-compose.yml`
 7. Click **Next** to review settings
 8. Click **Done**
 
-### 6A. Start the Project
+### 6A. Launch Project
 
-Launch your SynAuthProxy project.
+Launch your RevProxAuth project.
 
-1. In the **Project** tab, select `synauthproxy`
+1. In the **Project** tab, select `revproxauth`
 2. Click **Build** (first time only)
 3. Click **Start**
 4. Check logs by clicking on the project → **Action** → **View Logs**
-5. You should see: `SynAuthProxy Starting` with your configuration
+3. Wait for build to complete
+4. Select **Action** > **Start**
+5. You should see: `RevProxAuth Starting` with your configuration
 
 Container is now running on `http://YOUR-NAS-IP:9000`
 
@@ -123,13 +125,13 @@ Navigate to Container Manager (Docker) on your Synology NAS. If you don't have i
 
 
 
-## 3B. Download SynAuthProxy Image
+## 3B. Download RevProxAuth Image
 
-## 3B. Download SynAuthProxy Image
+## 3B. Download RevProxAuth Image
 
-Pull the official SynAuthProxy image from Docker Hub.
+Pull the official RevProxAuth image from Docker Hub.
 
-1. In the **Registry** tab, search for: `okigan/synauthproxy`
+1. In the **Registry** tab, search for: `okigan/revproxauth`
 2. Click on the result and select **Download**
 3. Choose the **latest** tag
 4. Wait for the download to complete (check the **Image** tab)
@@ -142,10 +144,10 @@ Pull the official SynAuthProxy image from Docker Hub.
 
 Create a new container from the downloaded image.
 
-1. Go to the **Container** tab
-2. Click the downloaded `okigan/synauthproxy` image
+1. Go to **Container** tab
+2. Click the downloaded `okigan/revproxauth` image
 3. Click **Launch**
-4. Set Container Name to: `synauthproxy`
+4. Set Container Name to: `revproxauth`
 5. Click **Advanced Settings**
 
 
@@ -174,7 +176,7 @@ Mount a volume to persist your configuration across container restarts.
 
 1. Go to **Volume Settings** tab
 2. Click **Add Folder**
-3. Create new folder: `/docker/synauthproxy/config`
+3. Create new folder: `/docker/revproxauth/config`
 4. Mount path: `/app/config`
 
 
@@ -195,8 +197,8 @@ Configure the essential settings. **Replace all EXAMPLE values with your actual 
 
 **Optional Variables:**
 * RADIUS_PORT=1812   # Default RADIUS port (usually no change needed)
-* RADIUS_NAS_IDENTIFIER=synauthproxy   # NAS identifier (usually no change needed)
-* SYNAUTHPROXY_ADMIN_USERS=admin   # EXAMPLE: Comma-separated admin usernames (e.g., admin,john) - leave empty for all users
+* RADIUS_NAS_IDENTIFIER=revproxauth   # NAS identifier (usually no change needed)
+* REVPROXAUTH_ADMIN_USERS=admin   # EXAMPLE: Comma-separated admin usernames (e.g., admin,john) - leave empty for all users
 * LOG_LEVEL=INFO   # Use DEBUG for troubleshooting
 * NO_COLOR=1   # Cleaner logs
 * UV_NO_PROGRESS=1   # Suppress progress bars
@@ -212,7 +214,7 @@ Review your settings and launch the container!
 1. Click **Apply** then **Done**
 2. The container will start automatically
 3. Check logs to verify it started successfully
-4. You should see: `SynAuthProxy Starting` with your configuration
+4. You should see: `RevProxAuth Starting` with your configuration
 
 > ⚠️ **If port 9000 is not accessible:** The port mapping bug has occurred. Stop this container and use Method A (Docker Compose) instead.
 
@@ -220,9 +222,9 @@ Container should now be running on `http://YOUR-NAS-IP:9000`
 
 ---
 
-## 9. Configure Reverse Proxy
+## Step 4: Configure Reverse Proxy
 
-Set up Synology's built-in reverse proxy to route traffic through SynAuthProxy.
+Set up Synology's built-in reverse proxy to route traffic through RevProxAuth.
 
 1. Open **Control Panel** → **Login Portal** → **Advanced**
 2. Go to **Reverse Proxy** tab
@@ -235,11 +237,11 @@ Set up Synology's built-in reverse proxy to route traffic through SynAuthProxy.
 
 ## 10. Setup Complete 🎉
 
-Your SynAuthProxy is now ready to use!
+Your RevProxAuth is now ready to use!
 
 Next Steps:
 
-1. Visit `https://yourdomain.com/synauthproxy`
+1. Visit `https://yourdomain.com/revproxauth`
 2. Log in with your Synology credentials
 3. Add your first application mapping
 4. Start using centralized authentication!
