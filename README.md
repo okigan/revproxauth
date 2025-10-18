@@ -1,6 +1,6 @@
 # 🔐 RevProxAuth
 
-> **Reverse proxy authentication with RADIUS** - Multiple deployment options for securing your self-hosted applications
+> **RADIUS authentication for reverse proxies** - Complete all-in-one solution + lightweight middleware for Caddy, Traefik, and Nginx
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
@@ -19,15 +19,20 @@ You have multiple self-hosted applications with fragmented authentication:
 - ❌ **User management nightmare** - Add/remove users in multiple places
 - ❌ **No centralized access control**
 
-## ✨ The Solution
+## ✨ The Solutions
 
-**RevProxAuth** provides centralized RADIUS authentication for your reverse proxy infrastructure. Choose the deployment that fits your needs:
+This repository provides **multiple RADIUS authentication solutions** for reverse proxy infrastructure:
 
+1. **RevProxAuth (All-in-One)** - Complete reverse proxy with authentication and web UI
+2. **radius-auth-go** - Lightweight Go implementation supporting forward auth and auth_request protocols
+3. **radius-auth-py** - Lightweight Python implementation supporting forward auth and auth_request protocols
+
+**Key Benefits:**
 - ✅ **Single Sign-On** - One authentication system for all apps
 - ✅ **RADIUS Integration** - Use existing RADIUS servers (Synology, FreeRADIUS, etc.)
-- ✅ **Multiple Deployment Options** - Full proxy or lightweight auth middleware
+- ✅ **Flexible Deployment** - Full proxy or lightweight auth middleware
 - ✅ **WebSocket Support** - Automatic HTTP → WebSocket upgrades
-- ✅ **Path Manipulation** - Strip prefixes, rewrite URLs
+- ✅ **Path Manipulation** - Strip prefixes, rewrite URLs (RevProxAuth)
 - ✅ **Zero Application Changes** - Apps don't need auth code
 
 ---
@@ -36,9 +41,15 @@ You have multiple self-hosted applications with fragmented authentication:
 
 ---
 
-## 🏗️ Deployment Options
+## 🏗️ What's in This Repository
 
-This repository explores different approaches to adding RADIUS authentication to reverse proxy setups. Choose the one that fits your infrastructure:
+This repository provides **complete RADIUS authentication solutions** for different reverse proxy architectures. All components are production-ready and available as Docker images:
+
+- **RevProxAuth** - All-in-one solution with routing, auth, and web UI (one container does it all)
+- **radius-auth-go** - Lightweight auth middleware (Go) supporting forward auth and auth_request protocols
+- **radius-auth-py** - Lightweight auth middleware (Python) supporting forward auth and auth_request protocols
+
+Choose the deployment that fits your infrastructure:
 
 ### 1️⃣ All-in-One: RevProxAuth (Synology-Optimized)
 
@@ -83,7 +94,7 @@ graph LR
 graph LR
     A["🌐 Internet"] 
     B["🟦 Caddy :443"]
-    C["⚡ radius-auth-go :5000"]
+    C["⚡ radius-auth-go :8999"]
     D["🔑 RADIUS :1812"]
     E["📱 Apps"]
     
@@ -107,7 +118,7 @@ graph LR
 
 **Docker Images:** 
 - `caddy:latest`
-- `okigan/revproxauth-radius-auth-go:latest`
+- `okigan/radius-auth-go:latest`
 
 ---
 
@@ -119,7 +130,7 @@ graph LR
 graph LR
     A["🌐 Internet"] 
     B["🔷 Traefik :443"]
-    C["⚡ radius-auth-go :5000"]
+    C["⚡ radius-auth-go :8999"]
     D["🔑 RADIUS :1812"]
     E["📱 Apps"]
     
@@ -143,7 +154,7 @@ graph LR
 
 **Docker Images:**
 - `traefik:latest`
-- `okigan/revproxauth-radius-auth-go:latest`
+- `okigan/radius-auth-go:latest`
 
 ---
 
@@ -155,7 +166,7 @@ graph LR
 graph LR
     A["🌐 Internet"] 
     B["🟩 Nginx :443"]
-    C["🐍 radius-auth-py :5000"]
+    C["🐍 radius-auth-py :8999"]
     D["🔑 RADIUS :1812"]
     E["📱 Apps"]
     
@@ -179,58 +190,49 @@ graph LR
 
 **Docker Images:**
 - `nginx:latest`
-- `okigan/revproxauth-radius-auth-py:latest`
+- `okigan/radius-auth-py:latest`
 
 ---
 
 ## 🎯 Which Deployment Should I Choose?
 
-| Deployment | Best For | Complexity | Features |
-|------------|----------|------------|----------|
-| **RevProxAuth (All-in-One)** | Synology users, beginners | ⭐ Easy | Web UI, routing, auth in one container |
-| **Caddy + Auth** | Automatic HTTPS, simplicity | ⭐⭐ Medium | Zero-config SSL, simple Caddyfile |
-| **Traefik + Auth** | Docker/K8s, dynamic discovery | ⭐⭐⭐ Advanced | Service discovery, labels-based config |
-| **Nginx + Auth** | Production, high traffic | ⭐⭐ Medium | Proven stability, maximum performance |
+| Component | Reverse Proxy | Best For | Complexity | Language |
+|-----------|---------------|----------|------------|----------|
+| **RevProxAuth** | Built-in | Synology users, all-in-one solution | ⭐ Easy | Python |
+| **radius-auth-go** | Caddy/Traefik/Nginx | Minimal footprint, fast startup | ⭐⭐ Medium | Go |
+| **radius-auth-py** | Caddy/Traefik/Nginx | Easy customization, Python ecosystem | ⭐⭐ Medium | Python |
+
+---
+
+##  Docker Images
+
+All components in this repository are published as multi-architecture Docker images (AMD64 + ARM64):
+
+| Image | Component | Use Case |
+|-------|-----------|----------|
+| **`okigan/revproxauth:latest`** | RevProxAuth all-in-one | Complete solution with routing, auth, and web UI |
+| **`okigan/radius-auth-go:latest`** | radius-auth-go | Lightweight Go middleware (forward auth & auth_request) |
+| **`okigan/radius-auth-py:latest`** | radius-auth-py | Lightweight Python middleware (forward auth & auth_request) |
+
+**Source code locations:**
+- RevProxAuth: [`apps/revproxauth/`](apps/revproxauth/)
+- radius-auth-go: [`apps/radius-auth-go/`](apps/radius-auth-go/)
+- radius-auth-py: [`apps/radius-auth-py/`](apps/radius-auth-py/)
 
 ---
 
 ## 🚀 Quick Start
 
-### For Synology Users (Recommended)
+Choose your deployment:
 
-See detailed guide: [Synology Setup Guide](docs/setup-guide.md)
-
-**TL;DR:**
-1. Install RADIUS Server from Package Center
-2. Pull `okigan/revproxauth:latest` in Container Manager
-3. Configure one reverse proxy rule: `*.yourdomain.com → localhost:9000`
-4. Manage mappings via web UI at `/revproxauth`
-
-### For Caddy Users
-
-See: [`apps/caddy/`](apps/caddy/README.md) for complete example
-
-### For Traefik Users
-
-See: [`apps/traefik/`](apps/traefik/README.md) for complete example
-
-### For Nginx Users
-
-See: [`apps/nginx/`](apps/nginx/README.md) for complete example
+1. **[RevProxAuth (Synology)](#-revproxauth-setup-synology)** - All-in-one with web UI
+2. **[Caddy + radius-auth](#-caddy--radius-auth-setup)** - Automatic HTTPS
+3. **[Traefik + radius-auth](#-traefik--radius-auth-setup)** - Dynamic service discovery
+4. **[Nginx + radius-auth](#-nginx--radius-auth-setup)** - Production stability
 
 ---
 
-## 📦 Docker Images
-
-All images are multi-architecture (AMD64 + ARM64) and available on Docker Hub:
-
-- **`okigan/revproxauth:latest`** - Complete all-in-one solution with web UI (ideal for Synology)
-- **`okigan/revproxauth-radius-auth-go:latest`** - Lightweight Go-based RADIUS auth service (forward auth)
-- **`okigan/revproxauth-radius-auth-py:latest`** - Lightweight Python-based RADIUS auth service (auth_request)
-
----
-
-## 🚀 Quick Start: Synology Deployment
+## 🚀 RevProxAuth Setup (Synology)
 
 ### Prerequisites
 
@@ -251,27 +253,7 @@ All images are multi-architecture (AMD64 + ARM64) and available on Docker Hub:
 
 ### Step 2: Deploy RevProxAuth Container
 
-**Option A: Using Container Manager GUI**
-
-1. Open **Container Manager** → **Registry** tab
-2. Search for `okigan/revproxauth` and download `latest` tag
-3. Go to **Container** tab → click the image → **Launch**
-4. Configure:
-   - **Container name:** `revproxauth`
-   - **Port mapping:** `9000:9000`
-   - **Volume:** Mount `/docker/revproxauth/config` to `/app/config` (for persistent settings)
-   - **Environment variables:**
-     ```
-     RADIUS_SERVER=172.17.0.1
-     RADIUS_SECRET=your-secret-here
-     RADIUS_PORT=1812
-     RADIUS_NAS_IDENTIFIER=revproxauth
-     LOGIN_DOMAIN=yourdomain.com
-     REVPROXAUTH_ADMIN_USERS=admin
-     ```
-5. Click **Apply** → **Done**
-
-**Option B: Using Docker Compose (Recommended)**
+**Using Docker Compose (Recommended)**
 
 1. Create folder `/docker/revproxauth` on your NAS
 2. Create `docker-compose.yml`:
@@ -399,41 +381,382 @@ Forward:   http://backend/users
 
 ---
 
-## 🔧 Alternative Deployments
+## � Caddy + radius-auth Setup
 
-### Already Using Nginx, Caddy, or Traefik?
+Deploy Caddy with RADIUS authentication middleware for automatic HTTPS and simple configuration.
 
-If you already have a reverse proxy and just need RADIUS authentication, use our lightweight auth services:
+### Docker Compose
 
-**For forward auth proxies (Caddy/Traefik):** Use either implementation
-- `okigan/revproxauth-radius-auth-go` (Go - minimal footprint)
-- `okigan/revproxauth-radius-auth-py` (Python - easier to customize)
+```yaml
+services:
+  radius:
+    image: freeradius/freeradius-server:latest
+    ports:
+      - "1812:1812/udp"
+    volumes:
+      - ./radius-config/clients.conf:/etc/raddb/clients.conf:ro
+      - ./radius-config/users:/etc/raddb/mods-config/files/authorize:ro
 
-**For auth_request proxies (Nginx):** Use either implementation
-- Both support the auth_request protocol
+  radius-auth-go:
+    image: okigan/radius-auth-go:latest
+    environment:
+      RADIUS_SERVER: radius
+      RADIUS_SECRET: your-secret-here
+      RADIUS_PORT: 1812
+      RADIUS_NAS_IDENTIFIER: caddy-auth
+      SESSION_TIMEOUT: 3600
 
-See [docs/advanced.md](docs/advanced.md) for integration examples.
+  caddy:
+    image: caddy:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - radius-auth-go
+
+volumes:
+  caddy_data:
+  caddy_config:
+```
+
+### Caddyfile Configuration
+
+```caddyfile
+# Enable automatic HTTPS
+{
+    email your-email@example.com
+}
+
+# Protected site
+app.yourdomain.com {
+    # Forward authentication
+    forward_auth radius-auth-go:8999 {
+        uri /auth
+        copy_headers X-Auth-User
+    }
+    
+    # Proxy to your application
+    reverse_proxy your-app:8080
+}
+
+# Login/logout routes (no auth required)
+app.yourdomain.com {
+    handle /login* {
+        reverse_proxy radius-auth-go:8999
+    }
+    handle /logout {
+        reverse_proxy radius-auth-go:8999
+    }
+}
+
+# Add more protected sites
+another.yourdomain.com {
+    forward_auth radius-auth-go:8999 {
+        uri /auth
+        copy_headers X-Auth-User
+    }
+    reverse_proxy another-app:3000
+}
+```
+
+**Key points:**
+- Replace `your-secret-here` with your RADIUS shared secret
+- Update `app.yourdomain.com` with your actual domain
+- Update `your-app:8080` with your application's address
+- Caddy handles automatic HTTPS certificate provisioning
 
 ---
 
-## 🛠️ Troubleshooting
+## 🚀 Traefik + radius-auth Setup
 
-### Can't Login
-- Verify RADIUS Server is running (Synology → RADIUS Server)
-- Check shared secret matches in both RADIUS Server and RevProxAuth
-- Ensure user exists (Control Panel → User & Group)
-- Check logs: `docker logs revproxauth`
+Deploy Traefik with RADIUS authentication middleware for dynamic service discovery.
 
-### Port 9000 Not Accessible
-- Verify container is running: `docker ps | grep revproxauth`
-- Check port mapping: Should show `9000:9000`
-- Test locally: `curl http://localhost:9000/health`
+### Docker Compose
 
-### Reverse Proxy Not Working
-- Verify Synology reverse proxy rule points to `localhost:9000`
-- Check DNS resolves to your Synology IP
-- Ensure SSL certificate is valid
-- Enable WebSocket in reverse proxy settings
+```yaml
+services:
+  radius:
+    image: freeradius/freeradius-server:latest
+    ports:
+      - "1812:1812/udp"
+    volumes:
+      - ./radius-config/clients.conf:/etc/raddb/clients.conf:ro
+      - ./radius-config/users:/etc/raddb/mods-config/files/authorize:ro
+
+  radius-auth-go:
+    image: okigan/radius-auth-go:latest
+    environment:
+      RADIUS_SERVER: radius
+      RADIUS_SECRET: your-secret-here
+      RADIUS_PORT: 1812
+      RADIUS_NAS_IDENTIFIER: traefik-auth
+      SESSION_TIMEOUT: 3600
+
+  traefik:
+    image: traefik:v2.10
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./dynamic:/etc/traefik/dynamic:ro
+    depends_on:
+      - radius-auth-go
+
+  # Example protected application
+  whoami:
+    image: traefik/whoami:latest
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`app.yourdomain.com`)"
+      - "traefik.http.routers.whoami.entrypoints=websecure"
+      - "traefik.http.routers.whoami.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.whoami.middlewares=radius-auth"
+```
+
+### traefik.yml
+
+```yaml
+entryPoints:
+  web:
+    address: ":80"
+  websecure:
+    address: ":443"
+
+certificatesResolvers:
+  letsencrypt:
+    acme:
+      email: your-email@example.com
+      storage: /etc/traefik/acme.json
+      httpChallenge:
+        entryPoint: web
+
+providers:
+  docker:
+    exposedByDefault: false
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+```
+
+### dynamic/radius-auth.yml
+
+```yaml
+http:
+  middlewares:
+    radius-auth:
+      forwardAuth:
+        address: "http://radius-auth-go:8999/auth"
+        authResponseHeaders:
+          - "X-Auth-User"
+
+  routers:
+    radius-auth-login:
+      rule: "PathPrefix(`/login`) || PathPrefix(`/logout`)"
+      service: radius-auth-service
+      entryPoints:
+        - websecure
+      tls:
+        certResolver: letsencrypt
+
+  services:
+    radius-auth-service:
+      loadBalancer:
+        servers:
+          - url: "http://radius-auth-go:8999"
+```
+
+**Key points:**
+- Replace `your-secret-here` with your RADIUS shared secret
+- Update `app.yourdomain.com` with your actual domain
+- Add `traefik.http.routers.*.middlewares=radius-auth` label to protect services
+- Traefik handles automatic HTTPS with Let's Encrypt
+
+---
+
+## 🚀 Nginx + radius-auth Setup
+
+Deploy Nginx with RADIUS authentication middleware for production stability.
+
+### Docker Compose
+
+```yaml
+services:
+  radius:
+    image: freeradius/freeradius-server:latest
+    ports:
+      - "1812:1812/udp"
+    volumes:
+      - ./radius-config/clients.conf:/etc/raddb/clients.conf:ro
+      - ./radius-config/users:/etc/raddb/mods-config/files/authorize:ro
+
+  radius-auth-py:
+    image: okigan/radius-auth-py:latest
+    environment:
+      RADIUS_SERVER: radius
+      RADIUS_SECRET: your-secret-here
+      RADIUS_PORT: 1812
+      RADIUS_NAS_IDENTIFIER: nginx-auth
+      SESSION_TIMEOUT: 3600
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./conf.d:/etc/nginx/conf.d:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - radius-auth-py
+```
+
+### nginx.conf
+
+Add to your http block:
+
+```nginx
+http {
+    # WebSocket support
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        '' close;
+    }
+
+    # Include site configurations
+    include /etc/nginx/conf.d/*.conf;
+}
+```
+
+### conf.d/app.conf
+
+```nginx
+server {
+    listen 80;
+    server_name app.yourdomain.com;
+    
+    # Redirect to HTTPS
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name app.yourdomain.com;
+
+    ssl_certificate /etc/nginx/ssl/cert.pem;
+    ssl_certificate_key /etc/nginx/ssl/key.pem;
+
+    # Auth backend (internal only)
+    location = /auth {
+        internal;
+        proxy_pass http://radius-auth-py:8999/auth;
+        proxy_pass_request_body off;
+        proxy_set_header Content-Length "";
+        proxy_set_header X-Original-URI $request_uri;
+        proxy_set_header X-Original-Method $request_method;
+        proxy_set_header Host $host;
+        proxy_set_header Cookie $http_cookie;
+    }
+
+    # Login/logout pages (no auth required)
+    location ~ ^/(login|do-login|logout) {
+        proxy_pass http://radius-auth-py:8999;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Protected routes
+    location / {
+        # Authenticate using auth backend
+        auth_request /auth;
+        
+        # Pass auth headers to upstream
+        auth_request_set $auth_user $upstream_http_x_auth_user;
+        proxy_set_header X-Auth-User $auth_user;
+        
+        # Redirect to login if not authenticated
+        error_page 401 = @error401;
+        
+        # Proxy to your application
+        proxy_pass http://your-app:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # WebSocket support
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+    }
+
+    # Redirect to login page
+    location @error401 {
+        return 302 $scheme://$http_host/login?next=$request_uri;
+    }
+}
+```
+
+**Key points:**
+- Replace `your-secret-here` with your RADIUS shared secret
+- Update `app.yourdomain.com` with your actual domain
+- Update `your-app:8080` with your application's address
+- Configure SSL certificates in `/etc/nginx/ssl/`
+- Copy the server block for each additional protected site
+
+---
+
+## �🔧 Architecture & Components
+
+### RevProxAuth (All-in-One)
+
+A complete reverse proxy with built-in RADIUS authentication and web management UI. Ideal for Synology NAS users or anyone wanting a simple single-container solution.
+
+**Location:** [`apps/revproxauth/`](apps/revproxauth/)
+
+**Features:**
+- Complete reverse proxy with host/path-based routing
+- Built-in RADIUS authentication
+- Web UI for managing URL mappings
+- WebSocket support with automatic upgrade
+- Path manipulation (strip_path, rewrite)
+
+### radius-auth-go (Middleware)
+
+Lightweight Go service implementing **forward auth** and **auth_request** protocols. Works with Caddy, Traefik, Nginx, and any compatible reverse proxy. Minimal resource footprint.
+
+**Location:** [`apps/radius-auth-go/`](apps/radius-auth-go/)
+
+**Features:**
+- Forward auth protocol (Caddy/Traefik)
+- auth_request protocol (Nginx)
+- Session management with secure cookies
+- Built-in login/logout pages
+- Minimal memory footprint (~10MB)
+- Single binary, no dependencies
+
+### radius-auth-py (Middleware)
+
+Lightweight Python service implementing **forward auth** and **auth_request** protocols. Works with Caddy, Traefik, Nginx, and any compatible reverse proxy. Easy to customize and extend.
+
+**Location:** [`apps/radius-auth-py/`](apps/radius-auth-py/)
+
+**Features:**
+- Forward auth protocol (Caddy/Traefik)
+- auth_request protocol (Nginx)
+- Session management with secure cookies
+- Built-in login/logout pages
+- Easy to extend with Python
+- FastAPI-based for high performance
 
 ---
 

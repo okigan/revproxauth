@@ -57,7 +57,7 @@ func init() {
 		SessionTimeout:      getEnvInt("SESSION_TIMEOUT", 3600),
 		ProxyType:           getEnv("PROXY_TYPE", "generic"),
 		ProxyName:           getEnv("PROXY_NAME", "Auth"),
-		Port:                getEnv("PORT", "5000"),
+		Port:                getEnv("PORT", "8999"),
 	}
 
 	sessionStore = &SessionStore{

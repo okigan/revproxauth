@@ -22,7 +22,7 @@ Environment variables:
 - `SESSION_TIMEOUT` - Session timeout in seconds (default: 3600)
 - `PROXY_TYPE` - Proxy type: "nginx" or "generic" (default: "generic")
 - `PROXY_NAME` - Display name for branding (default: "Auth")
-- `PORT` - HTTP server port (default: "5000")
+- `PORT` - HTTP server port (default: "8999")
 
 ## Endpoints
 
@@ -48,7 +48,7 @@ go build -o go-radius-auth main.go
 
 ```bash
 docker build -t go-radius-auth .
-docker run -p 5000:5000 -e RADIUS_SERVER=radius go-radius-auth
+docker run -p 8999:8999 -e RADIUS_SERVER=radius go-radius-auth
 ```
 
 ## Differences from Python Version

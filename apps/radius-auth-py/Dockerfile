@@ -33,8 +33,8 @@ RUN addgroup -g 1000 app && \
 
 USER app
 
-# Expose port
-EXPOSE 5000
+# Expose the application port
+EXPOSE 8999
 
-# Run the application
-CMD ["uvicorn", "auth:app", "--host", "0.0.0.0", "--port", "5000"]
+# Start the application
+CMD ["uvicorn", "auth:app", "--host", "0.0.0.0", "--port", "8999"]

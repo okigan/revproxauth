@@ -131,7 +131,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: okigan/revproxauth-radius-auth-go
+          images: okigan/radius-auth-go
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -140,7 +140,7 @@ jobs:
             type=semver,pattern={{major}}
             type=raw,value=latest,enable={{is_default_branch}}
           labels: |
-            org.opencontainers.image.title=RevProxAuth RADIUS Auth (Go)
+            org.opencontainers.image.title=RADIUS Auth (Go)
             org.opencontainers.image.description=Lightweight RADIUS authentication middleware for Caddy and Traefik
             org.opencontainers.image.revision=${{ github.sha }}
 
@@ -184,7 +184,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: okigan/revproxauth-radius-auth-py
+          images: okigan/radius-auth-py
           tags: |
             type=ref,event=branch
             type=ref,event=pr
@@ -193,7 +193,7 @@ jobs:
             type=semver,pattern={{major}}
             type=raw,value=latest,enable={{is_default_branch}}
           labels: |
-            org.opencontainers.image.title=RevProxAuth RADIUS Auth (Python)
+            org.opencontainers.image.title=RADIUS Auth (Python)
             org.opencontainers.image.description=Lightweight RADIUS authentication middleware for Nginx
             org.opencontainers.image.revision=${{ github.sha }}
 

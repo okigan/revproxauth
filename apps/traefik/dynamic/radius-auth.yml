@@ -2,7 +2,7 @@ http:
   middlewares:
     radius-auth-go:
       forwardAuth:
-        address: "http://radius-auth-go:5000/auth"
+        address: "http://radius-auth-go:8999/auth"
         trustForwardHeader: true
         authResponseHeaders:
           - "X-Auth-User"
@@ -28,7 +28,7 @@ http:
     radius-auth-go:
       loadBalancer:
         servers:
-          - url: "http://radius-auth-go:5000"
+          - url: "http://radius-auth-go:8999"
 
     whoami:
       loadBalancer:
