@@ -1,6 +1,6 @@
 # 🔐 RevProxAuth
 
-> **Centralized authentication proxy for Synology NAS** - Secure your self-hosted apps with RADIUS authentication and elegant management UI
+> **Reverse proxy authentication with RADIUS** - Multiple deployment options for securing your self-hosted applications
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
@@ -12,24 +12,22 @@
 
 ## 🎯 The Problem
 
-You have multiple self-hosted applications (Docker containers, internal services, web apps) running on or near your Synology NAS. Each app has its own authentication system (or worse, none at all):
+You have multiple self-hosted applications with fragmented authentication:
 
-- ❌ **Fragmented Authentication** - Different passwords for each service
-- ❌ **Security Gaps** - Some apps exposed without proper auth
-- ❌ **User Management Nightmare** - Add/remove users in multiple places
-- ❌ **No WebSocket Support** - Many reverse proxies don't handle WebSocket upgrades
-- ❌ **Complex Configuration** - Managing routing rules across multiple services
+- ❌ **Different passwords** for each service
+- ❌ **Security gaps** - Some apps exposed without proper auth
+- ❌ **User management nightmare** - Add/remove users in multiple places
+- ❌ **No centralized access control**
 
 ## ✨ The Solution
 
-**RevProxAuth** sits between your Synology reverse proxy and your applications, providing:
+**RevProxAuth** provides centralized RADIUS authentication for your reverse proxy infrastructure. Choose the deployment that fits your needs:
 
-- ✅ **Single Sign-On** - Use your existing Synology user accounts
-- ✅ **Centralized Management** - One place to control all app routing
-- ✅ **Beautiful Web UI** - Manage mappings with inline editing
-- ✅ **WebSocket Ready** - Automatic HTTP → WebSocket upgrades
+- ✅ **Single Sign-On** - One authentication system for all apps
+- ✅ **RADIUS Integration** - Use existing RADIUS servers (Synology, FreeRADIUS, etc.)
+- ✅ **Multiple Deployment Options** - Full proxy or lightweight auth middleware
+- ✅ **WebSocket Support** - Automatic HTTP → WebSocket upgrades
 - ✅ **Path Manipulation** - Strip prefixes, rewrite URLs
-- ✅ **Role-Based Access** - Admin controls for mapping management
 - ✅ **Zero Application Changes** - Apps don't need auth code
 
 ---
@@ -38,213 +36,325 @@ You have multiple self-hosted applications (Docker containers, internal services
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Deployment Options
+
+This repository explores different approaches to adding RADIUS authentication to reverse proxy setups. Choose the one that fits your infrastructure:
+
+### 1️⃣ All-in-One: RevProxAuth (Synology-Optimized)
+
+**Best for:** Synology NAS users who want a complete solution with web UI
 
 ```mermaid
 graph TB
-    Client[👤 Client<br/>Browser/App]
-    DNS[🌐 DNS<br/>*.mysynology.com → Your IP]
-    LetsEncrypt[🔐 Let's Encrypt<br/>Certificate Authority]
+    Internet["🌐 Internet<br/>(HTTPS)"]
+    SynProxy["📦 Synology Reverse Proxy<br/>Port 443<br/>• SSL/TLS Termination<br/>• Let's Encrypt Certs"]
+    RevProx["🔐 RevProxAuth<br/>Port 9000<br/>• RADIUS Auth<br/>• Web UI for Mappings<br/>• Host-based Routing<br/>• WebSocket Support"]
+    RADIUS["🔑 Synology RADIUS Server<br/>Port 1812<br/>• User Database"]
+    App1["📱 App 1"]
+    App2["📱 App 2"]
+    App3["📱 App 3"]
     
-    subgraph Lan[LAN Network]
-        subgraph Synology["🖥️ Synology NAS"]
-            ReverseProxy[🌐 Synology Reverse Proxy<br/>HTTPS Termination - Port 443<br/>📜 SSL Certificate: *.mysynology.me]
-            RADIUS[🔑 RADIUS Server<br/>Port 1812<br/>User Database]
-            
-            subgraph Docker["🐳 Docker"]
-                SynAuth[🔐 RevProxAuth<br/>Port 9000<br/>Auth & Routing]
-                App1[📦 Docker App<br/>localhost:8080]
-            end
-        end
-        
-        App2[🌐 Web Service<br/>192.168.1.50:3000]
-        App3[⚙️ Internal Service<br/>192.168.1.100:5000]
-    end
+    Internet -->|"app.domain.com"| SynProxy
+    SynProxy -->|"HTTP"| RevProx
+    RevProx -.->|"Auth Check"| RADIUS
+    RevProx -->|"Proxy"| App1
+    RevProx -->|"Proxy"| App2
+    RevProx -->|"Proxy"| App3
     
-    Client -->|1. HTTPS Request<br/>app.mysynology.com| DNS
-    DNS -->|2. Route to NAS IP| ReverseProxy
-    ReverseProxy <-.->|Certificate Setup<br/>ACME Protocol| LetsEncrypt
-    ReverseProxy -->|3. HTTP<br/>localhost:9000| SynAuth
-    SynAuth -.->|4. Validate<br/>Credentials| RADIUS
-    SynAuth -->|5. Proxy Request| App1
-    SynAuth -->|5. Proxy Request| App2
-    SynAuth -->|5. Proxy Request| App3
-    
-    linkStyle 0 stroke:#1976D2,stroke-width:4px
-    linkStyle 1 stroke:#F57C00,stroke-width:4px
-    linkStyle 2 stroke:#1565C0,stroke-width:3px,stroke-dasharray:5
-    linkStyle 3 stroke:#2E7D32,stroke-width:4px
-    linkStyle 4 stroke:#E65100,stroke-width:3px,stroke-dasharray:5
-    linkStyle 5 stroke:#1565C0,stroke-width:4px
-    linkStyle 6 stroke:#D84315,stroke-width:4px
-    linkStyle 7 stroke:#D84315,stroke-width:4px
-    
-    style Client fill:#64B5F6,stroke:#1976D2,stroke-width:2px,color:#000
-    style DNS fill:#FFD54F,stroke:#F57C00,stroke-width:2px,color:#000
-    style LetsEncrypt fill:#90CAF9,stroke:#1565C0,stroke-width:2px,color:#000
-    style Synology fill:#E1BEE7,stroke:#7B1FA2,stroke-width:3px,color:#000
-    style Lan fill:#f5f5f5,stroke:#999,stroke-width:2px,color:#000
-    style Docker fill:#A5D6A7,stroke:#388E3C,stroke-width:2px,color:#000
-    style ReverseProxy fill:#FFF59D,stroke:#F57C00,stroke-width:2px,color:#000
-    style SynAuth fill:#81C784,stroke:#2E7D32,stroke-width:2px,color:#000
-    style RADIUS fill:#FFCC80,stroke:#E65100,stroke-width:2px,color:#000
-    style App1 fill:#64B5F6,stroke:#1565C0,stroke-width:2px,color:#000
-    style App2 fill:#FFAB91,stroke:#D84315,stroke-width:2px,color:#000
-    style App3 fill:#FFAB91,stroke:#D84315,stroke-width:2px,color:#000
+    style Internet fill:#e1f5ff
+    style SynProxy fill:#fff3e0
+    style RevProx fill:#c8e6c9
+    style RADIUS fill:#ffe0b2
+    style App1 fill:#f3e5f5
+    style App2 fill:#f3e5f5
+    style App3 fill:#f3e5f5
 ```
 
-### Request Flow
+**Features:**
+- ✅ Complete solution with web UI for managing mappings
+- ✅ Host-based routing (one wildcard proxy rule in Synology)
+- ✅ Path manipulation (strip_path support)
+- ✅ WebSocket automatic upgrade
+- ✅ Works with Synology's RADIUS Server package
 
-1. **Client** makes HTTPS request to `app.mysynology.com`
-2. **DNS** resolves to your Synology NAS public IP
-3. **Synology Reverse Proxy** (running on NAS) terminates SSL using a certificate that includes `*.mysynology.me` as a Subject Alternative Name (SAN) and forwards to RevProxAuth container
-4. **RevProxAuth** (Docker container on NAS) checks authentication:
-   - If not logged in → Show login page
-   - Validate credentials via **RADIUS server** (running on NAS)
-   - RADIUS verifies against Synology user database
-5. **Route matching** - Find the right backend based on URL
-6. **Path manipulation** - Strip prefixes if configured
-7. **Proxy** - Forward to destination app (HTTP or WebSocket)
+**Docker Image:** `okigan/revproxauth:latest`
+
+---
+
+### 2️⃣ Caddy + RADIUS Auth Middleware
+
+**Best for:** Users who want automatic HTTPS with Caddy's simplicity
+
+```mermaid
+graph TB
+    Internet["🌐 Internet<br/>(HTTPS)"]
+    Caddy["🟦 Caddy<br/>Port 443<br/>• SSL/TLS Termination<br/>• Auto Let's Encrypt<br/>• Forward Auth"]
+    AuthGo["⚡ radius-auth-go<br/>Port 5000<br/>• Lightweight RADIUS Auth<br/>• Stateless"]
+    RADIUS["🔑 RADIUS Server<br/>Port 1812<br/>• FreeRADIUS<br/>• Synology RADIUS<br/>• Any RADIUS server"]
+    App1["📱 App 1"]
+    App2["📱 App 2"]
+    App3["📱 App 3"]
+    
+    Internet -->|"app1.domain.com"| Caddy
+    Caddy -.->|"Forward Auth"| AuthGo
+    AuthGo -.->|"RADIUS Protocol"| RADIUS
+    Caddy -->|"Proxy"| App1
+    Caddy -->|"Proxy"| App2
+    Caddy -->|"Proxy"| App3
+    
+    style Internet fill:#e1f5ff
+    style Caddy fill:#b3e5fc
+    style AuthGo fill:#ffecb3
+    style RADIUS fill:#ffe0b2
+    style App1 fill:#f3e5f5
+    style App2 fill:#f3e5f5
+    style App3 fill:#f3e5f5
+```
+
+**Features:**
+- ✅ Automatic HTTPS certificate management
+- ✅ Lightweight Go-based auth middleware
+- ✅ Caddy handles all routing via Caddyfile
+- ✅ Minimal resource usage
+
+**Docker Images:** 
+- `caddy:latest`
+- `okigan/revproxauth-radius-auth-go:latest`
+
+---
+
+### 3️⃣ Traefik + RADIUS Auth Middleware
+
+**Best for:** Dynamic container environments with service discovery
+
+```mermaid
+graph TB
+    Internet["🌐 Internet<br/>(HTTPS)"]
+    Traefik["🔷 Traefik<br/>Port 443<br/>• SSL/TLS Termination<br/>• Auto Let's Encrypt<br/>• Service Discovery<br/>• Forward Auth"]
+    AuthGo["⚡ radius-auth-go<br/>Port 5000<br/>• Lightweight RADIUS Auth<br/>• Stateless"]
+    RADIUS["🔑 RADIUS Server<br/>Port 1812"]
+    App1["📱 App 1<br/>labels: traefik.enable=true"]
+    App2["📱 App 2<br/>labels: traefik.enable=true"]
+    App3["📱 App 3<br/>labels: traefik.enable=true"]
+    
+    Internet -->|"app1.domain.com"| Traefik
+    Traefik -.->|"Forward Auth"| AuthGo
+    AuthGo -.->|"RADIUS Protocol"| RADIUS
+    Traefik -->|"Proxy"| App1
+    Traefik -->|"Proxy"| App2
+    Traefik -->|"Proxy"| App3
+    
+    style Internet fill:#e1f5ff
+    style Traefik fill:#c5cae9
+    style AuthGo fill:#ffecb3
+    style RADIUS fill:#ffe0b2
+    style App1 fill:#f3e5f5
+    style App2 fill:#f3e5f5
+    style App3 fill:#f3e5f5
+```
+
+**Features:**
+- ✅ Dynamic service discovery (Docker labels)
+- ✅ Automatic HTTPS with Let's Encrypt
+- ✅ Dashboard for monitoring
+- ✅ Perfect for Docker/Kubernetes environments
+
+**Docker Images:**
+- `traefik:latest`
+- `okigan/revproxauth-radius-auth-go:latest`
+
+---
+
+### 4️⃣ Nginx + RADIUS Auth Middleware
+
+**Best for:** Production environments needing proven stability
+
+```mermaid
+graph TB
+    Internet["🌐 Internet<br/>(HTTPS)"]
+    Nginx["🟩 Nginx<br/>Port 443<br/>• SSL/TLS Termination<br/>• Auth Request Module"]
+    AuthPy["🐍 radius-auth-py<br/>Port 5000<br/>• RADIUS Auth<br/>• Python Implementation"]
+    RADIUS["🔑 RADIUS Server<br/>Port 1812"]
+    App1["📱 App 1"]
+    App2["📱 App 2"]
+    App3["📱 App 3"]
+    
+    Internet -->|"app1.domain.com"| Nginx
+    Nginx -.->|"auth_request"| AuthPy
+    AuthPy -.->|"RADIUS Protocol"| RADIUS
+    Nginx -->|"Proxy"| App1
+    Nginx -->|"Proxy"| App2
+    Nginx -->|"Proxy"| App3
+    
+    style Internet fill:#e1f5ff
+    style Nginx fill:#c8e6c9
+    style AuthPy fill:#fff9c4
+    style RADIUS fill:#ffe0b2
+    style App1 fill:#f3e5f5
+    style App2 fill:#f3e5f5
+    style App3 fill:#f3e5f5
+```
+
+**Features:**
+- ✅ Battle-tested production stability
+- ✅ High performance
+- ✅ Fine-grained configuration control
+- ✅ auth_request module integration
+
+**Docker Images:**
+- `nginx:latest`
+- `okigan/revproxauth-radius-auth-py:latest`
+
+---
+
+## 🎯 Which Deployment Should I Choose?
+
+| Deployment | Best For | Complexity | Features |
+|------------|----------|------------|----------|
+| **RevProxAuth (All-in-One)** | Synology users, beginners | ⭐ Easy | Web UI, routing, auth in one container |
+| **Caddy + Auth** | Automatic HTTPS, simplicity | ⭐⭐ Medium | Zero-config SSL, simple Caddyfile |
+| **Traefik + Auth** | Docker/K8s, dynamic discovery | ⭐⭐⭐ Advanced | Service discovery, labels-based config |
+| **Nginx + Auth** | Production, high traffic | ⭐⭐ Medium | Proven stability, maximum performance |
 
 ---
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### For Synology Users (Recommended)
 
-- Synology NAS with DSM 7.0+
-- Container Manager (Docker) installed via Package Center
-- RADIUS Server package installed on Synology
-- Domain name with DNS configured (e.g., `*.mysynology.me`)
-- SSL certificate installed on Synology that includes your subdomains as Subject Alternative Names (SAN)
-  - Example: Certificate for `*.mysynology.me` or with SANs for `app.mysynology.me`, `api.mysynology.me`, etc.
-  - Can use Let's Encrypt via DSM's built-in certificate manager
+See detailed guide: [Synology Setup Guide](docs/setup-guide.md)
 
-### 📖 Interactive Setup Guide
+**TL;DR:**
+1. Install RADIUS Server from Package Center
+2. Pull `okigan/revproxauth:latest` in Container Manager
+3. Configure one reverse proxy rule: `*.yourdomain.com → localhost:9000`
+4. Manage mappings via web UI at `/revproxauth`
 
-**New to RevProxAuth?** Follow our step-by-step visual guide:
+### For Caddy Users
 
-👉 **[Open Interactive Setup Walkthrough](https://okigan.github.io/revproxauth/setup-guide.html)** 👈
+See: [`apps/caddy/`](apps/caddy/README.md) for complete example
 
-Or follow the manual installation steps below:
+### For Traefik Users
 
-### Installation Methods
+See: [`apps/traefik/`](apps/traefik/README.md) for complete example
 
-Choose one:
-- **🎯 Method 1: Synology Container Manager GUI** (Recommended for most users)
-- **⚙️ Method 2: Docker Compose** (For advanced users who prefer CLI)
+### For Nginx Users
+
+See: [`apps/nginx/`](apps/nginx/README.md) for complete example
 
 ---
 
-### 1. Install RADIUS Server on Synology
+## � Docker Images
 
-```bash
-# Via Package Center
-1. Open Package Center
-2. Search for "RADIUS Server"
-3. Click Install
+All images are multi-architecture (AMD64 + ARM64) and available on Docker Hub:
+
+- **`okigan/revproxauth:latest`** - Complete solution with web UI (for Synology)
+- **`okigan/revproxauth-radius-auth-go:latest`** - Lightweight auth middleware for Caddy/Traefik
+- **`okigan/revproxauth-radius-auth-py:latest`** - Lightweight auth middleware for Nginx
+
+---
+
+## 🚀 Quick Start: Synology Deployment
+
+### Prerequisites
+
+- ✅ Synology NAS with DSM 7.0+
+- ✅ Container Manager installed (from Package Center)
+- ✅ RADIUS Server installed (from Package Center)
+- ✅ Domain name with DNS pointing to your NAS
+- ✅ SSL certificate configured (Synology can auto-provision Let's Encrypt)
+
+### Step 1: Install RADIUS Server
+
+1. Open **Package Center** on Synology
+2. Search for **"RADIUS Server"** and install
+3. Open RADIUS Server app:
+   - Enable on port `1812`
+   - Set a **shared secret** (remember this!)
+   - Add client: `127.0.0.1` or `172.17.0.1` with the same secret
+
+### Step 2: Deploy RevProxAuth Container
+
+**Option A: Using Container Manager GUI**
+
+1. Open **Container Manager** → **Registry** tab
+2. Search for `okigan/revproxauth` and download `latest` tag
+3. Go to **Container** tab → click the image → **Launch**
+4. Configure:
+   - **Container name:** `revproxauth`
+   - **Port mapping:** `9000:9000`
+   - **Volume:** Mount `/docker/revproxauth/config` to `/app/config` (for persistent settings)
+   - **Environment variables:**
+     ```
+     RADIUS_SERVER=172.17.0.1
+     RADIUS_SECRET=your-secret-here
+     RADIUS_PORT=1812
+     RADIUS_NAS_IDENTIFIER=revproxauth
+     LOGIN_DOMAIN=yourdomain.com
+     REVPROXAUTH_ADMIN_USERS=admin
+     ```
+5. Click **Apply** → **Done**
+
+**Option B: Using Docker Compose (Recommended)**
+
+1. Create folder `/docker/revproxauth` on your NAS
+2. Create `docker-compose.yml`:
+
+```yaml
+services:
+  revproxauth:
+    image: okigan/revproxauth:latest
+    container_name: revproxauth
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    environment:
+      RADIUS_SERVER: 172.17.0.1           # Docker bridge to Synology host
+      RADIUS_SECRET: your-secret-here     # Match RADIUS Server secret
+      RADIUS_PORT: 1812
+      RADIUS_NAS_IDENTIFIER: revproxauth
+      LOGIN_DOMAIN: yourdomain.com        # Your domain
+      REVPROXAUTH_ADMIN_USERS: admin      # Comma-separated admin users
+    volumes:
+      - ./config:/app/config              # Persistent configuration
+    networks:
+      - revproxauth-network
+
+networks:
+  revproxauth-network:
+    name: revproxauth-network
 ```
 
-**Learn more:** [Synology RADIUS Server](https://www.synology.com/en-global/dsm/packages/RadiusServer)
+3. In Container Manager → **Project** tab → **Create**
+4. Name: `revproxauth`, Path: `/docker/revproxauth`
+5. Click **Build** then **Start**
 
-Configure RADIUS:
-- Open RADIUS Server app
-- Enable on port `1812`
-- Set shared secret (e.g., `your-secret-here`)
-- Add client: `127.0.0.1` with the same secret
+### Step 3: Configure Synology Reverse Proxy
 
-### 2. Deploy RevProxAuth
+1. Go to **Control Panel** → **Login Portal** → **Advanced** tab
+2. Click **Reverse Proxy** → **Create**
+3. Configure rule:
+   - **Source:** `https://app.yourdomain.com:443`
+   - **Destination:** `http://localhost:9000`
+   - ✅ Enable **WebSocket**
+4. Repeat for each subdomain you want to protect
 
-#### 🎯 Method 1: Synology Container Manager GUI (Recommended)
+**Pro Tip:** Use a wildcard rule to simplify setup:
+- **Source:** `https://*.yourdomain.com:443`
+- **Destination:** `http://localhost:9000`
+- Then manage specific host routing in RevProxAuth's UI
 
-1. **Download Image from Docker Hub**
-   - Open Container Manager on your Synology
-   - Go to **Registry** tab
-   - Search for `okigan/revproxauth`
-   - Click **Download** and select `latest` tag
+### Step 4: Configure Your First Mapping
 
-2. **Launch Container**
-   - Go to **Container** tab
-   - Click downloaded image → **Launch**
-   - Container Name: `revproxauth`
+1. Visit `https://yourdomain.com/revproxauth` (or any domain routed to it)
+2. Log in with your Synology credentials
+3. Click **Add Mapping**:
+   - **Match URL:** `app.yourdomain.com`
+   - **Destination:** `http://your-app:8080`
+   - **Flags:** Leave empty (or add `strip_path` if needed)
+4. Click **Save**
 
-3. **Configure Port Settings**
-   - Click **Advanced Settings**
-   - **Port Settings** tab
-   - Add: Local Port `9000` → Container Port `9000`
-
-4. **Configure Volume (for persistent config)**
-   - **Volume Settings** tab
-   - Click **Add Folder**
-   - Create/Select: `/docker/revproxauth/config`
-   - Mount path: `/app/config`
-
-5. **Configure Environment Variables**
-   - **Environment** tab
-   - Click **+ Add** for each variable below:
-     
-     **Required Variables:**
-     ```
-     RADIUS_SERVER=192.168.10.12          # Your RADIUS server IP (see note below)
-     RADIUS_SECRET=your-secret-here       # Your RADIUS shared secret  
-     LOGIN_DOMAIN=yourdomain.com          # Your domain
-     ```
-     
-     **Optional Variables:**
-     ```
-     RADIUS_PORT=1812                     # Default: 1812
-     RADIUS_NAS_IDENTIFIER=revproxauth    # Default: revproxauth
-     REVPROXAUTH_ADMIN_USERS=admin,user1  # Comma-separated admin users (empty = all users can edit)
-     ```
-   
-   💡 **Connecting to RADIUS Server on Synology Host:**
-   
-   If your RADIUS server runs on the same Synology NAS, use one of these for `RADIUS_SERVER`:
-   - `172.17.0.1` - Docker bridge gateway (most reliable on Synology)
-   - `host.docker.internal` - Works on newer Docker versions
-   - Your Synology's LAN IP (e.g., `192.168.1.100`)
-
-6. **Apply and Start**
-   - Click **Apply** → **Done**
-   - Container will start automatically
-
-#### ⚙️ Method 2: Docker Compose (Advanced)
-
-```bash
-# Create directory
-mkdir -p ~/revproxauth && cd ~/revproxauth
-
-# Download docker-compose.yml
-wget https://raw.githubusercontent.com/okigan/revproxauth/main/docker-compose.revproxauth.yml
-
-# Edit with your settings
-nano docker-compose.yml
-
-# Start the service
-docker-compose up -d
-```
-
-### 3. Configure Synology Reverse Proxy
-
-Control Panel → Login Portal → Advanced → Reverse Proxy
-
-Create rules for each subdomain:
-
-| Source | Destination |
-|--------|-------------|
-| `https://app.mysynology.com:443` | `http://localhost:9000` |
-| `https://api.mysynology.com:443` | `http://localhost:9000` |
-
-✅ Enable WebSocket support in each rule!
-
-### 4. Configure Mappings
-
-Visit `https://yourdomain.com/revproxauth` and add your apps:
-
-| Match URL | Destination | Flags |
-|-----------|-------------|-------|
-| `app.mysynology.com` | `http://localhost:8080` | - |
-| `api.mysynology.com/v1` | `http://docker-api:3000` | `strip_path` |
+That's it! Your app is now protected with Synology authentication! 🎉
 
 ---
 
@@ -252,58 +362,30 @@ Visit `https://yourdomain.com/revproxauth` and add your apps:
 
 ### Environment Variables
 
-### Environment Variables
-
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `RADIUS_SERVER` | ✅ Yes | - | RADIUS server IP/hostname (usually `127.0.0.1`) |
+| `RADIUS_SERVER` | ✅ Yes | - | RADIUS server IP (use `172.17.0.1` for Synology host) |
 | `RADIUS_SECRET` | ✅ Yes | - | RADIUS shared secret |
 | `RADIUS_PORT` | No | `1812` | RADIUS server port |
 | `RADIUS_NAS_IDENTIFIER` | No | `revproxauth` | NAS identifier sent to RADIUS |
 | `LOGIN_DOMAIN` | No | - | Domain for login redirects |
-| `REVPROXAUTH_ADMIN_USERS` | No | - | Comma-separated admin usernames (empty = all users are admins) |
-
-### Docker Compose Example
-
-```json
-### Docker Compose Example
-
-```yaml
-services:
-  revproxauth:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    environment:
-      RADIUS_SERVER: 127.0.0.1
-      RADIUS_SECRET: your-secret-here
-      RADIUS_PORT: 1812
-      RADIUS_NAS_IDENTIFIER: revproxauth
-      LOGIN_DOMAIN: yourdomain.com
-      # REVPROXAUTH_ADMIN_USERS: admin,user1  # Optional
-    ports:
-      - "9000:9000"
-    volumes:
-      - ./config:/app/config
-      - /etc/localtime:/etc/localtime:ro
-```
+| `REVPROXAUTH_ADMIN_USERS` | No | - | Comma-separated admin usernames (empty = all users can edit) |
 
 ### Mappings Configuration
 
-Edit `config/revproxauth.json` or use the web UI at `https://yourdomain.com/revproxauth`:
+Mappings are managed via the web UI at `https://yourdomain.com/revproxauth`, or by editing `config/revproxauth.json`:
 
 ```json
 {
   "version": "1.0",
   "mappings": [
     {
-      "match_url": "app.mysynology.com",
+      "match_url": "app.yourdomain.com",
       "http_dest": "http://localhost:8080",
       "flags": []
     },
     {
-      "match_url": "api.mysynology.com/v1",
+      "match_url": "api.yourdomain.com/v1",
       "http_dest": "http://docker-api:3000",
       "flags": ["strip_path"]
     }
@@ -311,224 +393,67 @@ Edit `config/revproxauth.json` or use the web UI at `https://yourdomain.com/revp
 }
 ```
 
+**Match URL Patterns:**
+- `app.yourdomain.com` → Matches all paths on this subdomain
+- `yourdomain.com/app` → Matches paths starting with `/app`
+- `api.yourdomain.com/v1` → Combined host + path matching
+
 **Available Flags:**
-- `strip_path` - Remove the path portion before forwarding
+- `strip_path` - Remove the matched path prefix before forwarding
 - `disabled` - Temporarily disable this mapping
 
 ---
 
 ## 🎨 Features
 
-### 📍 Smart URL Matching
+### WebSocket Support
+No configuration needed! RevProxAuth automatically detects `Upgrade: websocket` headers and proxies WebSocket connections.
 
-| Pattern | Matches | Example |
-|---------|---------|---------|
-| `app.mysynology.com` | All paths on subdomain | `app.mysynology.com/any/path` |
-| `mysynology.com/app` | Paths starting with `/app` | `mysynology.com/app/users` |
-| `api.mysynology.com/v1` | Combined | `api.mysynology.com/v1/data` |
-
-### 🔄 Automatic WebSocket Upgrades
-
-No special configuration needed! RevProxAuth detects `Upgrade: websocket` headers and:
-- ✅ Establishes WebSocket connection to backend
-- ✅ Forwards handshake headers
-- ✅ Proxies messages bidirectionally
-- ✅ Handles text and binary frames
-
-### ✂️ Path Stripping
-
-Perfect for apps that expect to run at root:
-
+### Path Stripping
 ```
-Incoming:  https://api.mysynology.com/v1/users
-Match:     api.mysynology.com/v1  (with strip_path flag)
+Incoming:  https://api.yourdomain.com/v1/users
+Match:     api.yourdomain.com/v1  (with strip_path flag)
 Forward:   http://backend/users
 ```
 
-### 👥 Admin Management
+### Admin Management
+- **View:** All authenticated users can view mappings
+- **Edit:** Only users in `REVPROXAUTH_ADMIN_USERS` can modify
+- **UI:** Inline editing, drag-to-reorder, enable/disable toggles
 
-- **View Mappings** - All authenticated users can view
-- **Edit Mappings** - Only admin users (set via `REVPROXAUTH_ADMIN_USERS`)
-- **Web UI** - Inline editing, drag-to-reorder, enable/disable toggles
+---
 
-### 🎯 Management UI
+## 🔧 Alternative Deployments
 
-- ✏️ Inline editing with auto-save
-- 🔼🔽 Reorder mappings (priority matters!)
-- ✅ Enable/disable mappings without deleting
-- 📱 Responsive design
+### Already Using Nginx, Caddy, or Traefik?
+
+If you already have a reverse proxy and just need RADIUS authentication, use our lightweight auth middleware:
+
+**For Nginx:** `okigan/revproxauth-radius-auth-py` (auth_request module)
+**For Caddy/Traefik:** `okigan/revproxauth-radius-auth-go` (forward auth)
+
+See [docs/advanced.md](docs/advanced.md) for integration examples.
 
 ---
 
 ## 🛠️ Troubleshooting
 
-### Cannot Login
-- Verify RADIUS server is running: Synology → RADIUS Server
-- Check shared secret matches in both places
-- Ensure user exists in Synology (Control Panel → User & Group)
+### Can't Login
+- Verify RADIUS Server is running (Synology → RADIUS Server)
+- Check shared secret matches in both RADIUS Server and RevProxAuth
+- Ensure user exists (Control Panel → User & Group)
 - Check logs: `docker logs revproxauth`
 
+### Port 9000 Not Accessible
+- Verify container is running: `docker ps | grep revproxauth`
+- Check port mapping: Should show `9000:9000`
+- Test locally: `curl http://localhost:9000/health`
+
 ### Reverse Proxy Not Working
-- Verify reverse proxy rule points to port `9000`
+- Verify Synology reverse proxy rule points to `localhost:9000`
 - Check DNS resolves to your Synology IP
-- Test: `curl http://localhost:9000/health`
-
-### WebSocket Connection Fails
-- Enable WebSocket in Synology reverse proxy settings
-- Check backend app supports WebSocket
-
----
-
-## 🏗️ Development
-
-### Setup Development Environment
-
-```bash
-# Clone the repository
-git clone https://github.com/okigan/revproxauth.git
-cd revproxauth
-
-# Install dependencies (using uv)
-uv sync
-
-# Install pre-commit hooks for automatic linting
-make install-hooks
-```
-
-### Code Quality
-
-This project uses [Ruff](https://docs.astral.sh/ruff/) for linting and formatting.
-
-**Available commands:**
-
-```bash
-# Run linter and formatter (auto-fix issues)
-make lint
-
-# Check linting without making changes
-make lint-check
-
-# Format code only
-make format
-```
-
-**Pre-commit Hook:**
-
-The git pre-commit hook automatically runs ruff linter and formatter before each commit. Install it with:
-
-```bash
-make install-hooks
-```
-
-This ensures code quality and consistency across all commits.
-
-**CI/CD:**
-
-GitHub Actions automatically runs linting on:
-- All pushes to `main` branch
-- All pull requests
-- Manual workflow dispatch
-
-The Docker build workflow will only proceed if linting passes.
-
-### Running Locally
-
-```bash
-# Run with uvicorn
-uvicorn main:app --reload --port 9000
-
-# Or run in Docker
-docker-compose up --build
-```
-
-### Project Structure
-
-```
-revproxauth/
-├── main.py              # Main FastAPI application
-├── config/              # Configuration files
-├── templates/           # Jinja2 HTML templates
-├── static/              # CSS/JS assets
-├── pyrad-stubs/         # Type stubs for pyrad library
-└── tools/               # Build and development tools
-```
-
----
-
-## � Testing with Custom Backend
-
-By default, all proxy stacks route to the included `whoami` test container. To test with your own backend service:
-
-### Option 1: Using `/etc/hosts` (Recommended for Quick Testing)
-
-Map custom hostnames to localhost or other IPs:
-
-```bash
-# Add to /etc/hosts
-sudo sh -c 'echo "127.0.0.1 nvbox" >> /etc/hosts'
-
-# Or point to another IP
-sudo sh -c 'echo "192.168.1.100 myapp" >> /etc/hosts'
-```
-
-Then update the backend URLs in config files:
-- **RevProxAuth**: `apps/revproxauth/config/revproxauth.json` - change `http_dest`
-- **nginx**: `apps/nginx/config/default.conf` - change `proxy_pass` URLs
-- **Traefik**: `apps/traefik/dynamic/py-radius-auth.yml` - change service URL
-- **Caddy**: `apps/caddy/Caddyfile` - change `reverse_proxy`
-
-### Option 2: Docker Network (For Containerized Services)
-
-Add your test service to the same Docker networks:
-
-```yaml
-services:
-  myapp:
-    image: my-test-image
-    networks:
-      - revproxauth-network
-      - nginx-network
-      - traefik-network
-      - caddy-network
-    ports:
-      - "8080:8080"
-```
-
-Reference it by service name (e.g., `http://myapp:8080`) in the configs.
-
-### Option 3: Environment Variables (Coming Soon)
-
-Future versions will support environment variable overrides:
-
-```bash
-BACKEND_HOST=nvbox BACKEND_PORT=8080 make up-nginx
-```
-
-### Testing Endpoints
-
-After configuration, test each proxy:
-
-```bash
-# RevProxAuth
-curl -I http://localhost:9000
-
-# nginx
-curl -I http://localhost:9010
-
-# Traefik
-curl -I http://localhost:9020
-
-# Caddy
-curl -I http://localhost:9030
-```
-
-All should redirect to `/login?next=/` when unauthenticated.
-
----
-
-## �🤝 Contributing
-
-Contributions welcome! Fork the repo, create a feature branch, and submit a pull request.
+- Ensure SSL certificate is valid
+- Enable WebSocket in reverse proxy settings
 
 ---
 
