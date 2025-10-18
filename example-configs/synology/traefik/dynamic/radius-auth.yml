@@ -1,5 +1,12 @@
 http:
   middlewares:
+    # Force HTTPS scheme for radius-auth-go (applied globally in traefik.yml)
+    force-https-scheme:
+      headers:
+        customRequestHeaders:
+          X-Forwarded-Proto: "https"
+    
+    # RADIUS authentication middleware
     radius-auth:
       forwardAuth:
         address: "http://radius-auth-go:8999/auth"
@@ -7,12 +14,28 @@ http:
           - "X-Auth-User"
 
   routers:
+    # Login/logout routes (no auth required)
     radius-auth-routes:
-      rule: "PathPrefix(`/login`) || PathPrefix(`/logout`)"
+      rule: "PathPrefix(`/login`) || PathPrefix(`/do-login`) || PathPrefix(`/logout`)"
       service: radius-auth-service
+      priority: 100  # High priority to match before protected routes
+
+    # Protected application routes
+    # Example: app1.yourdomain.com -> http://backend-host:8080
+    app1:
+      rule: "Host(`app1.yourdomain.com`)"  # CHANGE THIS to your domain!
+      service: app1-service
+      middlewares:
+        - radius-auth
 
   services:
     radius-auth-service:
       loadBalancer:
         servers:
           - url: "http://radius-auth-go:8999"
+    
+    # Example: Backend application service
+    app1-service:
+      loadBalancer:
+        servers:
+          - url: "http://your-backend-host:8080"  # CHANGE THIS to your backend!

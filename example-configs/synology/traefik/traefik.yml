@@ -1,12 +1,21 @@
 entryPoints:
   web:
     address: ":80"
+    # Force HTTPS scheme since Synology terminates HTTPS
+    http:
+      middlewares:
+        - force-https-scheme@file
+
   websecure:
     address: ":443"
 
 providers:
-  docker:
-    exposedByDefault: false
   file:
     directory: /etc/traefik/dynamic
     watch: true
+
+log:
+  level: INFO
+
+accessLog:
+  format: common

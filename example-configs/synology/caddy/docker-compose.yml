@@ -2,8 +2,8 @@ services:
   radius-auth-go:
     image: okigan/radius-auth-go:latest
     environment:
-      RADIUS_SERVER: 172.17.0.1        # Synology host
-      RADIUS_SECRET: your-secret-here  # ⚠️ CHANGE THIS!
+      RADIUS_SERVER: 192.168.10.12  # CHANGE THIS to your Synology IP
+      RADIUS_SECRET: your-secret-here  # CHANGE THIS to match Synology RADIUS Server!
       RADIUS_PORT: 1812
       RADIUS_NAS_IDENTIFIER: radius_auth_go
       SESSION_TIMEOUT: 3600

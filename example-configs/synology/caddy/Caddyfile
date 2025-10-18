@@ -1,45 +1,27 @@
 {
-    # If Synology handles HTTPS, remove email and use auto_https off
-    # email your-email@example.com  # ⚠️ CHANGE THIS to your real email!
+    # Synology handles HTTPS, so disable Caddy's automatic HTTPS
     auto_https off
 }
 
-# Shared auth configuration
-(protected) {
-    forward_auth radius-auth-go:8999 {
-        uri /auth
-        copy_headers X-Auth-User
-    }
-}
-
-# Login/logout routes (no auth)
-(auth-routes) {
-    handle /login* {
-        reverse_proxy radius-auth-go:8999
-    }
-    handle /logout {
-        reverse_proxy radius-auth-go:8999
-    }
-}
-
 # Protected sites
-gpt-caddy.okulist.com:80 {  # Explicitly listen on port 80 only
-    route {
-        # Login/logout routes (no auth) - handle FIRST
-        handle /login* {
-            reverse_proxy radius-auth-go:8999
+your-domain.example.com:80 {  # CHANGE THIS to your actual domain!
+    # Define auth-exempt paths (login/logout don't require authentication)
+    @auth_exempt path /login /login/* /do-login /logout
+    
+    # Handle auth-exempt paths without authentication
+    handle @auth_exempt {
+        reverse_proxy radius-auth-go:8999 {
+            header_up X-Forwarded-Proto https
         }
-        handle /logout {
-            reverse_proxy radius-auth-go:8999
+    }
+    
+    # Everything else requires authentication
+    handle {
+        forward_auth radius-auth-go:8999 {
+            uri /auth
+            copy_headers X-Auth-User
+            header_up X-Forwarded-Proto https
         }
-        
-        # Everything else requires auth
-        handle {
-            forward_auth radius-auth-go:8999 {
-                uri /auth
-                copy_headers X-Auth-User
-            }
-            reverse_proxy http://nvbox:8080
-        }
+        reverse_proxy http://your-backend:8080  # CHANGE THIS to your backend!
     }
 }
