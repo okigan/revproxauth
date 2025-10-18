@@ -1,0 +1,22 @@
+services:
+  revproxauth:
+    image: okigan/revproxauth:latest
+    container_name: revproxauth
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+    environment:
+      RADIUS_SERVER: 172.17.0.1           # Docker bridge to Synology host
+      RADIUS_SECRET: your-secret-here     # Match RADIUS Server secret
+      RADIUS_PORT: 1812
+      RADIUS_NAS_IDENTIFIER: revproxauth
+      LOGIN_DOMAIN: yourdomain.com        # Your domain
+      REVPROXAUTH_ADMIN_USERS: admin      # Comma-separated admin users
+    volumes:
+      - ./config:/app/config              # Persistent configuration
+    networks:
+      - revproxauth-network
+
+networks:
+  revproxauth-network:
+    name: revproxauth-network
