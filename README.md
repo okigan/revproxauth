@@ -398,7 +398,7 @@ Deploy Caddy with RADIUS authentication middleware for automatic HTTPS.
 📥 **Quick Start - Download Configuration:**
 
 ```bash
-curl -L https://github.com/okigan/revproxauth/archive/refs/heads/main.tar.gz | tar -xz --strip=2 revproxauth-main/example-configs/synology/caddy
+curl -L https://github.com/okigan/revproxauth/archive/refs/heads/main.tar.gz | tar -xz --strip=3 revproxauth-main/example-configs/synology/caddy
 ```
 
 Or browse files at [example-configs/synology/caddy](https://github.com/okigan/revproxauth/tree/main/example-configs/synology/caddy)
@@ -486,7 +486,7 @@ Deploy Traefik with RADIUS authentication middleware for dynamic service discove
 📥 **Quick Start - Download Configuration:**
 
 ```bash
-curl -L https://github.com/okigan/revproxauth/archive/refs/heads/main.tar.gz | tar -xz --strip=2 revproxauth-main/example-configs/synology/traefik
+curl -L https://github.com/okigan/revproxauth/archive/refs/heads/main.tar.gz | tar -xz --strip=3 revproxauth-main/example-configs/synology/traefik
 ```
 
 Or browse files at [example-configs/synology/traefik](https://github.com/okigan/revproxauth/tree/main/example-configs/synology/traefik)
@@ -582,7 +582,7 @@ Deploy Nginx with RADIUS authentication middleware for production-grade stabilit
 📥 **Quick Start - Download Configuration:**
 
 ```bash
-curl -L https://github.com/okigan/revproxauth/archive/refs/heads/main.tar.gz | tar -xz --strip=2 revproxauth-main/example-configs/synology/nginx
+curl -L https://github.com/okigan/revproxauth/archive/refs/heads/main.tar.gz | tar -xz --strip=3 revproxauth-main/example-configs/synology/nginx
 ```
 
 Or browse files at [example-configs/synology/nginx](https://github.com/okigan/revproxauth/tree/main/example-configs/synology/nginx)
