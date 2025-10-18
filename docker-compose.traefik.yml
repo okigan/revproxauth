@@ -30,17 +30,17 @@ services:
       - ./apps/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./apps/traefik/dynamic:/etc/traefik/dynamic:ro
     depends_on:
-      - py-radius-auth
+      - go-radius-auth
       - whoami
     networks:
       - auth-network
 
-  # RADIUS authentication backend (shared)
-  py-radius-auth:
+  # RADIUS authentication backend (Go implementation)
+  go-radius-auth:
     build:
-      context: ./apps/py-radius-auth
+      context: ./apps/go-radius-auth
       dockerfile: Dockerfile
-    container_name: traefik-py-radius-auth
+    container_name: traefik-go-radius-auth
     restart: unless-stopped
     environment:
       RADIUS_SERVER: radius
@@ -48,6 +48,7 @@ services:
       RADIUS_PORT: 1812
       RADIUS_NAS_IDENTIFIER: traefik-auth
       SESSION_TIMEOUT: 3600
+      PROXY_TYPE: generic
       PROXY_NAME: Traefik
     depends_on:
       - radius
