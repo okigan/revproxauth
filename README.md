@@ -383,27 +383,22 @@ Forward:   http://backend/users
 
 ## � Caddy + radius-auth Setup
 
-Deploy Caddy with RADIUS authentication middleware for automatic HTTPS and simple configuration.
+## 🚀 Caddy + radius-auth Setup
+
+Deploy Caddy with RADIUS authentication middleware for automatic HTTPS.
+
+**Prerequisites:** Synology RADIUS Server installed and configured (see [RevProxAuth Setup](#-revproxauth-setup-synology))
 
 ### Docker Compose
 
 ```yaml
 services:
-  radius:
-    image: freeradius/freeradius-server:latest
-    ports:
-      - "1812:1812/udp"
-    volumes:
-      - ./radius-config/clients.conf:/etc/raddb/clients.conf:ro
-      - ./radius-config/users:/etc/raddb/mods-config/files/authorize:ro
-
   radius-auth-go:
     image: okigan/radius-auth-go:latest
     environment:
-      RADIUS_SERVER: radius
+      RADIUS_SERVER: 172.17.0.1        # Synology host
       RADIUS_SECRET: your-secret-here
       RADIUS_PORT: 1812
-      RADIUS_NAS_IDENTIFIER: caddy-auth
       SESSION_TIMEOUT: 3600
 
   caddy:
@@ -415,36 +410,29 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
-    depends_on:
-      - radius-auth-go
 
 volumes:
   caddy_data:
   caddy_config:
 ```
 
-### Caddyfile Configuration
+### Caddyfile - Protect Multiple Sites
 
 ```caddyfile
-# Enable automatic HTTPS
 {
     email your-email@example.com
 }
 
-# Protected site
-app.yourdomain.com {
-    # Forward authentication
+# Shared auth configuration
+(protected) {
     forward_auth radius-auth-go:8999 {
         uri /auth
         copy_headers X-Auth-User
     }
-    
-    # Proxy to your application
-    reverse_proxy your-app:8080
 }
 
-# Login/logout routes (no auth required)
-app.yourdomain.com {
+# Login/logout routes (no auth)
+(auth-routes) {
     handle /login* {
         reverse_proxy radius-auth-go:8999
     }
@@ -453,47 +441,44 @@ app.yourdomain.com {
     }
 }
 
-# Add more protected sites
-another.yourdomain.com {
-    forward_auth radius-auth-go:8999 {
-        uri /auth
-        copy_headers X-Auth-User
-    }
-    reverse_proxy another-app:3000
+# Protected sites
+app1.yourdomain.com {
+    import protected
+    import auth-routes
+    reverse_proxy app1:8080
+}
+
+app2.yourdomain.com {
+    import protected
+    import auth-routes
+    reverse_proxy app2:3000
+}
+
+app3.yourdomain.com {
+    import protected
+    import auth-routes
+    reverse_proxy app3:5000
 }
 ```
-
-**Key points:**
-- Replace `your-secret-here` with your RADIUS shared secret
-- Update `app.yourdomain.com` with your actual domain
-- Update `your-app:8080` with your application's address
-- Caddy handles automatic HTTPS certificate provisioning
 
 ---
 
 ## 🚀 Traefik + radius-auth Setup
 
-Deploy Traefik with RADIUS authentication middleware for dynamic service discovery.
+Deploy Traefik with RADIUS authentication for dynamic service discovery.
+
+**Prerequisites:** Synology RADIUS Server installed and configured (see [RevProxAuth Setup](#-revproxauth-setup-synology))
 
 ### Docker Compose
 
 ```yaml
 services:
-  radius:
-    image: freeradius/freeradius-server:latest
-    ports:
-      - "1812:1812/udp"
-    volumes:
-      - ./radius-config/clients.conf:/etc/raddb/clients.conf:ro
-      - ./radius-config/users:/etc/raddb/mods-config/files/authorize:ro
-
   radius-auth-go:
     image: okigan/radius-auth-go:latest
     environment:
-      RADIUS_SERVER: radius
+      RADIUS_SERVER: 172.17.0.1        # Synology host
       RADIUS_SECRET: your-secret-here
       RADIUS_PORT: 1812
-      RADIUS_NAS_IDENTIFIER: traefik-auth
       SESSION_TIMEOUT: 3600
 
   traefik:
@@ -501,22 +486,17 @@ services:
     ports:
       - "80:80"
       - "443:443"
-      - "8080:8080"  # Dashboard
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik.yml:/etc/traefik/traefik.yml:ro
       - ./dynamic:/etc/traefik/dynamic:ro
-    depends_on:
-      - radius-auth-go
 
-  # Example protected application
+  # Example: Protected application
   whoami:
     image: traefik/whoami:latest
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.whoami.rule=Host(`app.yourdomain.com`)"
-      - "traefik.http.routers.whoami.entrypoints=websecure"
-      - "traefik.http.routers.whoami.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.whoami.rule=Host(`app1.yourdomain.com`)"
       - "traefik.http.routers.whoami.middlewares=radius-auth"
 ```
 
@@ -528,14 +508,6 @@ entryPoints:
     address: ":80"
   websecure:
     address: ":443"
-
-certificatesResolvers:
-  letsencrypt:
-    acme:
-      email: your-email@example.com
-      storage: /etc/traefik/acme.json
-      httpChallenge:
-        entryPoint: web
 
 providers:
   docker:
@@ -557,13 +529,9 @@ http:
           - "X-Auth-User"
 
   routers:
-    radius-auth-login:
+    radius-auth-routes:
       rule: "PathPrefix(`/login`) || PathPrefix(`/logout`)"
       service: radius-auth-service
-      entryPoints:
-        - websecure
-      tls:
-        certResolver: letsencrypt
 
   services:
     radius-auth-service:
@@ -572,37 +540,32 @@ http:
           - url: "http://radius-auth-go:8999"
 ```
 
-**Key points:**
-- Replace `your-secret-here` with your RADIUS shared secret
-- Update `app.yourdomain.com` with your actual domain
-- Add `traefik.http.routers.*.middlewares=radius-auth` label to protect services
-- Traefik handles automatic HTTPS with Let's Encrypt
+**Protect additional services:** Add these labels to any container:
+```yaml
+labels:
+  - "traefik.enable=true"
+  - "traefik.http.routers.myapp.rule=Host(`myapp.yourdomain.com`)"
+  - "traefik.http.routers.myapp.middlewares=radius-auth"
+```
 
 ---
 
 ## 🚀 Nginx + radius-auth Setup
 
-Deploy Nginx with RADIUS authentication middleware for production stability.
+Deploy Nginx with RADIUS authentication for production stability.
+
+**Prerequisites:** Synology RADIUS Server installed and configured (see [RevProxAuth Setup](#-revproxauth-setup-synology))
 
 ### Docker Compose
 
 ```yaml
 services:
-  radius:
-    image: freeradius/freeradius-server:latest
-    ports:
-      - "1812:1812/udp"
-    volumes:
-      - ./radius-config/clients.conf:/etc/raddb/clients.conf:ro
-      - ./radius-config/users:/etc/raddb/mods-config/files/authorize:ro
-
   radius-auth-py:
     image: okigan/radius-auth-py:latest
     environment:
-      RADIUS_SERVER: radius
+      RADIUS_SERVER: 172.17.0.1        # Synology host
       RADIUS_SECRET: your-secret-here
       RADIUS_PORT: 1812
-      RADIUS_NAS_IDENTIFIER: nginx-auth
       SESSION_TIMEOUT: 3600
 
   nginx:
@@ -613,14 +576,9 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./conf.d:/etc/nginx/conf.d:ro
-      - ./ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - radius-auth-py
 ```
 
 ### nginx.conf
-
-Add to your http block:
 
 ```nginx
 http {
@@ -635,63 +593,43 @@ http {
 }
 ```
 
-### conf.d/app.conf
+### conf.d/protected-site.conf
+
+Create one file per protected site:
 
 ```nginx
 server {
     listen 80;
-    server_name app.yourdomain.com;
-    
-    # Redirect to HTTPS
-    return 301 https://$server_name$request_uri;
-}
+    server_name app1.yourdomain.com;
 
-server {
-    listen 443 ssl http2;
-    server_name app.yourdomain.com;
-
-    ssl_certificate /etc/nginx/ssl/cert.pem;
-    ssl_certificate_key /etc/nginx/ssl/key.pem;
-
-    # Auth backend (internal only)
+    # Auth backend (internal)
     location = /auth {
         internal;
         proxy_pass http://radius-auth-py:8999/auth;
         proxy_pass_request_body off;
         proxy_set_header Content-Length "";
         proxy_set_header X-Original-URI $request_uri;
-        proxy_set_header X-Original-Method $request_method;
         proxy_set_header Host $host;
         proxy_set_header Cookie $http_cookie;
     }
 
-    # Login/logout pages (no auth required)
+    # Login/logout (no auth)
     location ~ ^/(login|do-login|logout) {
         proxy_pass http://radius-auth-py:8999;
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
     }
 
     # Protected routes
     location / {
-        # Authenticate using auth backend
         auth_request /auth;
-        
-        # Pass auth headers to upstream
         auth_request_set $auth_user $upstream_http_x_auth_user;
         proxy_set_header X-Auth-User $auth_user;
-        
-        # Redirect to login if not authenticated
         error_page 401 = @error401;
         
-        # Proxy to your application
+        # Your application
         proxy_pass http://your-app:8080;
         proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
         
         # WebSocket support
         proxy_http_version 1.1;
@@ -699,19 +637,15 @@ server {
         proxy_set_header Connection $connection_upgrade;
     }
 
-    # Redirect to login page
     location @error401 {
         return 302 $scheme://$http_host/login?next=$request_uri;
     }
 }
 ```
 
-**Key points:**
-- Replace `your-secret-here` with your RADIUS shared secret
-- Update `app.yourdomain.com` with your actual domain
-- Update `your-app:8080` with your application's address
-- Configure SSL certificates in `/etc/nginx/ssl/`
-- Copy the server block for each additional protected site
+**Add more sites:** Copy the server block to new files in `conf.d/`, changing:
+- `server_name` (e.g., `app2.yourdomain.com`)
+- `proxy_pass` in location `/` (e.g., `http://another-app:3000`)
 
 ---
 
