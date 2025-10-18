@@ -622,32 +622,46 @@ http {
 }
 ```
 
-### conf.d/protected-site.conf
+### conf.d/auth-common.conf
 
-Create one file per protected site:
+Shared authentication configuration (reusable):
+
+```nginx
+# Auth backend (internal)
+location = /auth {
+    internal;
+    proxy_pass http://radius-auth-py:8999/auth;
+    proxy_pass_request_body off;
+    proxy_set_header Content-Length "";
+    proxy_set_header X-Original-URI $request_uri;
+    proxy_set_header Host $host;
+    proxy_set_header Cookie $http_cookie;
+}
+
+# Login/logout (no auth)
+location ~ ^/(login|do-login|logout) {
+    proxy_pass http://radius-auth-py:8999;
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Real-IP $remote_addr;
+}
+
+# Error handler for auth failures
+location @error401 {
+    return 302 $scheme://$http_host/login?next=$request_uri;
+}
+```
+
+### conf.d/app1.conf
+
+One file per protected site:
 
 ```nginx
 server {
     listen 80;
     server_name app1.yourdomain.com;
 
-    # Auth backend (internal)
-    location = /auth {
-        internal;
-        proxy_pass http://radius-auth-py:8999/auth;
-        proxy_pass_request_body off;
-        proxy_set_header Content-Length "";
-        proxy_set_header X-Original-URI $request_uri;
-        proxy_set_header Host $host;
-        proxy_set_header Cookie $http_cookie;
-    }
-
-    # Login/logout (no auth)
-    location ~ ^/(login|do-login|logout) {
-        proxy_pass http://radius-auth-py:8999;
-        proxy_set_header Host $http_host;
-        proxy_set_header X-Real-IP $remote_addr;
-    }
+    # Include shared auth configuration
+    include /etc/nginx/conf.d/auth-common.conf;
 
     # Protected routes
     location / {
@@ -665,16 +679,41 @@ server {
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;
     }
+}
+```
 
-    location @error401 {
-        return 302 $scheme://$http_host/login?next=$request_uri;
+### conf.d/app2.conf
+
+Add more sites by creating new files:
+
+```nginx
+server {
+    listen 80;
+    server_name app2.yourdomain.com;
+
+    # Include shared auth configuration
+    include /etc/nginx/conf.d/auth-common.conf;
+
+    # Protected routes
+    location / {
+        auth_request /auth;
+        auth_request_set $auth_user $upstream_http_x_auth_user;
+        proxy_set_header X-Auth-User $auth_user;
+        error_page 401 = @error401;
+        
+        # Different backend
+        proxy_pass http://another-app:3000;
+        proxy_set_header Host $host;
+        
+        # WebSocket support
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
     }
 }
 ```
 
-**Add more sites:** Copy the server block to new files in `conf.d/`, changing:
-- `server_name` (e.g., `app2.yourdomain.com`)
-- `proxy_pass` in location `/` (e.g., `http://another-app:3000`)
+**Now adding sites is simple:** Just create a new file in `conf.d/`, include `auth-common.conf`, and specify your backend URL
 
 ---
 
