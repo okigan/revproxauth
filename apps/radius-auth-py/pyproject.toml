@@ -1,0 +1,15 @@
+[project]
+name = "radius-auth-py"
+version = "0.1.0"
+description = "Lightweight Python-based RADIUS authentication service"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi==0.104.1",
+    "uvicorn==0.24.0",
+    "python-multipart==0.0.6",
+    "pyrad==2.4",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

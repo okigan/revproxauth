@@ -46,28 +46,22 @@ This repository explores different approaches to adding RADIUS authentication to
 
 ```mermaid
 graph TB
-    Internet["🌐 Internet<br/>(HTTPS)"]
-    SynProxy["📦 Synology Reverse Proxy<br/>Port 443<br/>• SSL/TLS Termination<br/>• Let's Encrypt Certs"]
-    RevProx["🔐 RevProxAuth<br/>Port 9000<br/>• RADIUS Auth<br/>• Web UI for Mappings<br/>• Host-based Routing<br/>• WebSocket Support"]
-    RADIUS["🔑 Synology RADIUS Server<br/>Port 1812<br/>• User Database"]
-    App1["📱 App 1"]
-    App2["📱 App 2"]
-    App3["📱 App 3"]
+    Internet["🌐 Internet<br/>HTTPS"]
+    Synology["📦 Synology Reverse Proxy<br/>:443 SSL Termination"]
+    RevProx["🔐 RevProxAuth<br/>:9000<br/>Auth + Routing + UI"]
+    RADIUS["🔑 RADIUS Server<br/>:1812"]
+    Apps["📱 Applications"]
     
-    Internet -->|"app.domain.com"| SynProxy
-    SynProxy -->|"HTTP"| RevProx
-    RevProx -.->|"Auth Check"| RADIUS
-    RevProx -->|"Proxy"| App1
-    RevProx -->|"Proxy"| App2
-    RevProx -->|"Proxy"| App3
+    Internet -->|HTTPS| Synology
+    Synology -->|HTTP| RevProx
+    RevProx -.->|Auth| RADIUS
+    RevProx -->|Proxy| Apps
     
-    style Internet fill:#e1f5ff
-    style SynProxy fill:#fff3e0
-    style RevProx fill:#c8e6c9
-    style RADIUS fill:#ffe0b2
-    style App1 fill:#f3e5f5
-    style App2 fill:#f3e5f5
-    style App3 fill:#f3e5f5
+    style Internet fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
+    style Synology fill:#fff3e0,stroke:#f57c00,stroke-width:3px
+    style RevProx fill:#c8e6c9,stroke:#388e3c,stroke-width:3px
+    style RADIUS fill:#ffe0b2,stroke:#f57c00,stroke-width:3px
+    style Apps fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
 ```
 
 **Features:**
@@ -87,33 +81,27 @@ graph TB
 
 ```mermaid
 graph TB
-    Internet["🌐 Internet<br/>(HTTPS)"]
-    Caddy["🟦 Caddy<br/>Port 443<br/>• SSL/TLS Termination<br/>• Auto Let's Encrypt<br/>• Forward Auth"]
-    AuthGo["⚡ radius-auth-go<br/>Port 5000<br/>• Lightweight RADIUS Auth<br/>• Stateless"]
-    RADIUS["🔑 RADIUS Server<br/>Port 1812<br/>• FreeRADIUS<br/>• Synology RADIUS<br/>• Any RADIUS server"]
-    App1["📱 App 1"]
-    App2["📱 App 2"]
-    App3["📱 App 3"]
+    Internet["🌐 Internet<br/>HTTPS"]
+    Caddy["🟦 Caddy<br/>:443<br/>SSL + Routing"]
+    AuthGo["⚡ radius-auth-go<br/>:5000<br/>Go Implementation"]
+    RADIUS["🔑 RADIUS Server<br/>:1812"]
+    Apps["📱 Applications"]
     
-    Internet -->|"app1.domain.com"| Caddy
-    Caddy -.->|"Forward Auth"| AuthGo
-    AuthGo -.->|"RADIUS Protocol"| RADIUS
-    Caddy -->|"Proxy"| App1
-    Caddy -->|"Proxy"| App2
-    Caddy -->|"Proxy"| App3
+    Internet -->|HTTPS| Caddy
+    Caddy -.->|Forward Auth| AuthGo
+    AuthGo -.->|RADIUS| RADIUS
+    Caddy -->|Proxy| Apps
     
-    style Internet fill:#e1f5ff
-    style Caddy fill:#b3e5fc
-    style AuthGo fill:#ffecb3
-    style RADIUS fill:#ffe0b2
-    style App1 fill:#f3e5f5
-    style App2 fill:#f3e5f5
-    style App3 fill:#f3e5f5
+    style Internet fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
+    style Caddy fill:#b3e5fc,stroke:#0288d1,stroke-width:3px
+    style AuthGo fill:#fff9c4,stroke:#f9a825,stroke-width:3px
+    style RADIUS fill:#ffe0b2,stroke:#f57c00,stroke-width:3px
+    style Apps fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
 ```
 
 **Features:**
 - ✅ Automatic HTTPS certificate management
-- ✅ Lightweight Go-based auth middleware
+- ✅ Lightweight Go-based RADIUS auth service
 - ✅ Caddy handles all routing via Caddyfile
 - ✅ Minimal resource usage
 
@@ -129,28 +117,22 @@ graph TB
 
 ```mermaid
 graph TB
-    Internet["🌐 Internet<br/>(HTTPS)"]
-    Traefik["🔷 Traefik<br/>Port 443<br/>• SSL/TLS Termination<br/>• Auto Let's Encrypt<br/>• Service Discovery<br/>• Forward Auth"]
-    AuthGo["⚡ radius-auth-go<br/>Port 5000<br/>• Lightweight RADIUS Auth<br/>• Stateless"]
-    RADIUS["🔑 RADIUS Server<br/>Port 1812"]
-    App1["📱 App 1<br/>labels: traefik.enable=true"]
-    App2["📱 App 2<br/>labels: traefik.enable=true"]
-    App3["📱 App 3<br/>labels: traefik.enable=true"]
+    Internet["🌐 Internet<br/>HTTPS"]
+    Traefik["🔷 Traefik<br/>:443<br/>SSL + Discovery"]
+    AuthGo["⚡ radius-auth-go<br/>:5000<br/>Go Implementation"]
+    RADIUS["🔑 RADIUS Server<br/>:1812"]
+    Apps["📱 Applications<br/>Docker Labels"]
     
-    Internet -->|"app1.domain.com"| Traefik
-    Traefik -.->|"Forward Auth"| AuthGo
-    AuthGo -.->|"RADIUS Protocol"| RADIUS
-    Traefik -->|"Proxy"| App1
-    Traefik -->|"Proxy"| App2
-    Traefik -->|"Proxy"| App3
+    Internet -->|HTTPS| Traefik
+    Traefik -.->|Forward Auth| AuthGo
+    AuthGo -.->|RADIUS| RADIUS
+    Traefik -->|Proxy| Apps
     
-    style Internet fill:#e1f5ff
-    style Traefik fill:#c5cae9
-    style AuthGo fill:#ffecb3
-    style RADIUS fill:#ffe0b2
-    style App1 fill:#f3e5f5
-    style App2 fill:#f3e5f5
-    style App3 fill:#f3e5f5
+    style Internet fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
+    style Traefik fill:#c5cae9,stroke:#5c6bc0,stroke-width:3px
+    style AuthGo fill:#fff9c4,stroke:#f9a825,stroke-width:3px
+    style RADIUS fill:#ffe0b2,stroke:#f57c00,stroke-width:3px
+    style Apps fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
 ```
 
 **Features:**
@@ -171,28 +153,22 @@ graph TB
 
 ```mermaid
 graph TB
-    Internet["🌐 Internet<br/>(HTTPS)"]
-    Nginx["🟩 Nginx<br/>Port 443<br/>• SSL/TLS Termination<br/>• Auth Request Module"]
-    AuthPy["🐍 radius-auth-py<br/>Port 5000<br/>• RADIUS Auth<br/>• Python Implementation"]
-    RADIUS["🔑 RADIUS Server<br/>Port 1812"]
-    App1["📱 App 1"]
-    App2["📱 App 2"]
-    App3["📱 App 3"]
+    Internet["🌐 Internet<br/>HTTPS"]
+    Nginx["🟩 Nginx<br/>:443<br/>SSL + Routing"]
+    AuthPy["🐍 radius-auth-py<br/>:5000<br/>Python Implementation"]
+    RADIUS["🔑 RADIUS Server<br/>:1812"]
+    Apps["📱 Applications"]
     
-    Internet -->|"app1.domain.com"| Nginx
-    Nginx -.->|"auth_request"| AuthPy
-    AuthPy -.->|"RADIUS Protocol"| RADIUS
-    Nginx -->|"Proxy"| App1
-    Nginx -->|"Proxy"| App2
-    Nginx -->|"Proxy"| App3
+    Internet -->|HTTPS| Nginx
+    Nginx -.->|auth_request| AuthPy
+    AuthPy -.->|RADIUS| RADIUS
+    Nginx -->|Proxy| Apps
     
-    style Internet fill:#e1f5ff
-    style Nginx fill:#c8e6c9
-    style AuthPy fill:#fff9c4
-    style RADIUS fill:#ffe0b2
-    style App1 fill:#f3e5f5
-    style App2 fill:#f3e5f5
-    style App3 fill:#f3e5f5
+    style Internet fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
+    style Nginx fill:#c8e6c9,stroke:#388e3c,stroke-width:3px
+    style AuthPy fill:#fff9c4,stroke:#f9a825,stroke-width:3px
+    style RADIUS fill:#ffe0b2,stroke:#f57c00,stroke-width:3px
+    style Apps fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
 ```
 
 **Features:**
@@ -244,13 +220,13 @@ See: [`apps/nginx/`](apps/nginx/README.md) for complete example
 
 ---
 
-## � Docker Images
+## 📦 Docker Images
 
 All images are multi-architecture (AMD64 + ARM64) and available on Docker Hub:
 
-- **`okigan/revproxauth:latest`** - Complete solution with web UI (for Synology)
-- **`okigan/revproxauth-radius-auth-go:latest`** - Lightweight auth middleware for Caddy/Traefik
-- **`okigan/revproxauth-radius-auth-py:latest`** - Lightweight auth middleware for Nginx
+- **`okigan/revproxauth:latest`** - Complete all-in-one solution with web UI (ideal for Synology)
+- **`okigan/revproxauth-radius-auth-go:latest`** - Lightweight Go-based RADIUS auth service (forward auth)
+- **`okigan/revproxauth-radius-auth-py:latest`** - Lightweight Python-based RADIUS auth service (auth_request)
 
 ---
 
@@ -427,10 +403,14 @@ Forward:   http://backend/users
 
 ### Already Using Nginx, Caddy, or Traefik?
 
-If you already have a reverse proxy and just need RADIUS authentication, use our lightweight auth middleware:
+If you already have a reverse proxy and just need RADIUS authentication, use our lightweight auth services:
 
-**For Nginx:** `okigan/revproxauth-radius-auth-py` (auth_request module)
-**For Caddy/Traefik:** `okigan/revproxauth-radius-auth-go` (forward auth)
+**For forward auth proxies (Caddy/Traefik):** Use either implementation
+- `okigan/revproxauth-radius-auth-go` (Go - minimal footprint)
+- `okigan/revproxauth-radius-auth-py` (Python - easier to customize)
+
+**For auth_request proxies (Nginx):** Use either implementation
+- Both support the auth_request protocol
 
 See [docs/advanced.md](docs/advanced.md) for integration examples.
 
