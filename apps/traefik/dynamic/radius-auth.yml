@@ -1,8 +1,8 @@
 http:
   middlewares:
-    radius-auth:
+    py-radius-auth:
       forwardAuth:
-        address: "http://radius-auth:5000/auth"
+        address: "http://py-radius-auth:5000/auth"
         trustForwardHeader: true
         authResponseHeaders:
           - "X-Auth-User"
@@ -11,7 +11,7 @@ http:
     # Login and logout routes (no auth required)
     auth-routes:
       rule: "PathPrefix(`/login`) || PathPrefix(`/do-login`) || PathPrefix(`/logout`)"
-      service: radius-auth
+      service: py-radius-auth
       entryPoints:
         - web
 
@@ -19,16 +19,16 @@ http:
     app:
       rule: "PathPrefix(`/`)"
       middlewares:
-        - radius-auth
+        - py-radius-auth
       service: whoami
       entryPoints:
         - web
 
   services:
-    radius-auth:
+    py-radius-auth:
       loadBalancer:
         servers:
-          - url: "http://radius-auth:5000"
+          - url: "http://py-radius-auth:5000"
 
     whoami:
       loadBalancer:

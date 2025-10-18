@@ -5,7 +5,15 @@ This stack uses **nginx** with the `auth_request` module to provide RADIUS-based
 ## Architecture
 
 ```
-Client → nginx → radius-auth (RADIUS validation) → upstream app
+```
+Client → nginx → py-radius-auth (RADIUS validation) → upstream app
+```
+
+## How It Works
+
+1. Client makes request to nginx
+2. For each request, nginx makes a subrequest to the **py-radius-auth** service (`/auth` endpoint)
+3. **py-radius-auth** checks for valid session cookie or validates credentials against RADIUS
 ```
 
 ## How It Works
@@ -38,7 +46,9 @@ Edit `nginx.conf` to configure:
 - SSL/TLS settings
 - Proxy headers
 
-Edit `radius-auth/auth.py` to configure:
+### Authentication Backend
+
+Edit `py-radius-auth/auth.py` to configure:
 - RADIUS server settings
 - Session timeout
 - Authentication logic

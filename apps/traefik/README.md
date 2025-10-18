@@ -10,11 +10,11 @@ Client → Traefik → ForwardAuth Middleware (RADIUS validation) → upstream a
 
 ## How It Works
 
-1. **Traefik** receives all requests
-2. For protected routes, Traefik forwards authentication to the **radius-auth** service
-3. **radius-auth** validates session or RADIUS credentials
-4. If authenticated, Traefik proxies the request to the upstream application
-5. If not authenticated, radius-auth returns a redirect to the login page
+1. Client makes request to Traefik
+2. For protected routes, Traefik forwards authentication to the **py-radius-auth** service
+3. **py-radius-auth** validates session or RADIUS credentials
+4. If authenticated, request proceeds to upstream
+5. If not authenticated, py-radius-auth returns a redirect to the login page
 
 ## Features
 

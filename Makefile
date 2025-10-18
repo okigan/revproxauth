@@ -96,9 +96,9 @@ down-all:
 	-docker-compose -p caddy -f docker-compose.caddy.yml down --remove-orphans 2>/dev/null || true
 	-docker-compose -p synauthproxy -f docker-compose.dev.yml down --remove-orphans 2>/dev/null || true
 	@echo "🧹 Removing any orphaned containers..."
-	-docker container rm -f nginx nginx-radius nginx-radius-auth nginx-whoami 2>/dev/null || true
-	-docker container rm -f traefik traefik-radius traefik-radius-auth traefik-whoami 2>/dev/null || true
-	-docker container rm -f caddy caddy-radius caddy-radius-auth caddy-whoami 2>/dev/null || true
+	-docker container rm -f nginx nginx-radius nginx-py-radius-auth nginx-whoami 2>/dev/null || true
+	-docker container rm -f traefik traefik-radius traefik-py-radius-auth traefik-whoami 2>/dev/null || true
+	-docker container rm -f caddy caddy-radius caddy-py-radius-auth caddy-whoami 2>/dev/null || true
 	-docker container rm -f synauthproxy synauthproxy-radius synauthproxy-whoami 2>/dev/null || true
 
 up-all: down-all up-synauthproxy up-nginx up-traefik up-caddy

@@ -12,38 +12,25 @@
     }
 
     # Login routes (no auth required)
-    handle /login* {
-        reverse_proxy radius-auth:5000 {
-            header_up Host {host}
-            header_up X-Real-IP {remote}
+    handle /login {
+        reverse_proxy py-radius-auth:5000 {
+            header_up X-Original-URL {scheme}://{host}{uri}
         }
     }
 
-    handle /do-login* {
-        reverse_proxy radius-auth:5000 {
-            header_up Host {host}
-            header_up X-Real-IP {remote}
+    handle /do-login {
+        reverse_proxy py-radius-auth:5000 {
+            header_up X-Original-URL {scheme}://{host}{uri}
         }
     }
 
-    handle /logout* {
-        reverse_proxy radius-auth:5000 {
-            header_up Host {host}
-            header_up X-Real-IP {remote}
+    handle /logout {
+        reverse_proxy py-radius-auth:5000 {
+            header_up X-Original-URL {scheme}://{host}{uri}
         }
     }
 
-    # Protected routes - require authentication via forward_auth
-    handle /* {
-        forward_auth radius-auth:5000 {
-            uri /auth
-            copy_headers X-Auth-User
-        }
-
-        # Proxy to backend application
-        reverse_proxy whoami:80 {
-            header_up Host {host}
-            header_up X-Real-IP {remote}
-        }
-    }
+    # Protected routes - require authentication
+    handle {
+        forward_auth py-radius-auth:5000 {
 }

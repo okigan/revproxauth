@@ -473,8 +473,8 @@ sudo sh -c 'echo "192.168.1.100 myapp" >> /etc/hosts'
 
 Then update the backend URLs in config files:
 - **SynAuthProxy**: `apps/synauthproxy/config/synauthproxy.json` - change `http_dest`
-- **nginx**: `apps/nginx/config/default.conf` - change `proxy_pass`
-- **Traefik**: `apps/traefik/dynamic/radius-auth.yml` - change service URL
+- **nginx**: `apps/nginx/config/default.conf` - change `proxy_pass` URLs
+- **Traefik**: `apps/traefik/dynamic/py-radius-auth.yml` - change service URL
 - **Caddy**: `apps/caddy/Caddyfile` - change `reverse_proxy`
 
 ### Option 2: Docker Network (For Containerized Services)

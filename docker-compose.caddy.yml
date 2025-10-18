@@ -27,17 +27,17 @@ services:
     volumes:
       - ./apps/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
     depends_on:
-      - radius-auth
+      - py-radius-auth
       - whoami
     networks:
       - auth-network
 
   # RADIUS authentication backend (shared)
-  radius-auth:
+  py-radius-auth:
     build:
-      context: ./apps/radius-auth
+      context: ./apps/py-radius-auth
       dockerfile: Dockerfile
-    container_name: caddy-radius-auth
+    container_name: caddy-py-radius-auth
     restart: unless-stopped
     environment:
       RADIUS_SERVER: radius
