@@ -282,6 +282,9 @@ async def login(
         # Add NAS-Identifier attribute
         req["NAS-Identifier"] = RADIUS_NAS_IDENTIFIER.encode()
 
+        # Enable Message-Authenticator for security (required by Synology RADIUS)
+        req.add_message_authenticator()
+
         # Send request and get response
         logging.debug(f"Sending RADIUS packet to {RADIUS_SERVER}:{RADIUS_PORT}")
         reply = client.SendPacket(req)

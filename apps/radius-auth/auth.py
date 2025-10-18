@@ -241,6 +241,9 @@ async def do_login(
         req["User-Password"] = req.PwCrypt(password.encode())
         req["NAS-Identifier"] = RADIUS_NAS_IDENTIFIER.encode()
 
+        # Enable Message-Authenticator for security (required by Synology RADIUS)
+        req.add_message_authenticator()
+
         reply = radius_client.SendPacket(req)
 
         if reply.code == 2:  # Access-Accept
@@ -267,7 +270,8 @@ async def do_login(
             )
 
     except Exception as e:
-        logging.error(f"Login error: {str(e)}")
+        logging.error(f"Login error: {type(e).__name__}: {str(e)}")
+        logging.exception("Full traceback:")
         return RedirectResponse(
             url=f"{base_url}/login?next={next}&error=Authentication service error",
             status_code=303,
