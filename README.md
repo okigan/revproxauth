@@ -251,9 +251,9 @@ Choose your deployment:
    - Set a **shared secret** (remember this!)
    - Add client: `127.0.0.1` or `172.17.0.1` with the same secret
 
-### Step 2: Deploy RevProxAuth Container
+### Step 2: Deploy RevProxAuth
 
-**Using Docker Compose (Recommended)**
+**Using Synology Container Manager Project (NOTE: Synology Container Manager Container has issues)**
 
 1. Create folder `/docker/revproxauth` on your NAS
 2. Create `docker-compose.yml`:
@@ -312,6 +312,11 @@ networks:
    - **Flags:** Leave empty (or add `strip_path` if needed)
 4. Click **Save**
 
+### Step 5: Configure DNS and Let's Encrypt
+
+1. For every domain you want to be proxied update DNS records
+2. For every domain create Let's Encrypt certificate using Synology Control Panel>>Security
+
 That's it! Your app is now protected with Synology authentication! 🎉
 
 ---
@@ -331,7 +336,8 @@ That's it! Your app is now protected with Synology authentication! 🎉
 
 ### Mappings Configuration
 
-Mappings are managed via the web UI at `https://yourdomain.com/revproxauth`, or by editing `config/revproxauth.json`:
+* Mappings are managed via the web UI at `https://yourdomain.com/revproxauth`, or
+* by editing `config/revproxauth.json`:
 
 ```json
 {
@@ -646,51 +652,6 @@ server {
 **Add more sites:** Copy the server block to new files in `conf.d/`, changing:
 - `server_name` (e.g., `app2.yourdomain.com`)
 - `proxy_pass` in location `/` (e.g., `http://another-app:3000`)
-
----
-
-## �🔧 Architecture & Components
-
-### RevProxAuth (All-in-One)
-
-A complete reverse proxy with built-in RADIUS authentication and web management UI. Ideal for Synology NAS users or anyone wanting a simple single-container solution.
-
-**Location:** [`apps/revproxauth/`](apps/revproxauth/)
-
-**Features:**
-- Complete reverse proxy with host/path-based routing
-- Built-in RADIUS authentication
-- Web UI for managing URL mappings
-- WebSocket support with automatic upgrade
-- Path manipulation (strip_path, rewrite)
-
-### radius-auth-go (Middleware)
-
-Lightweight Go service implementing **forward auth** and **auth_request** protocols. Works with Caddy, Traefik, Nginx, and any compatible reverse proxy. Minimal resource footprint.
-
-**Location:** [`apps/radius-auth-go/`](apps/radius-auth-go/)
-
-**Features:**
-- Forward auth protocol (Caddy/Traefik)
-- auth_request protocol (Nginx)
-- Session management with secure cookies
-- Built-in login/logout pages
-- Minimal memory footprint (~10MB)
-- Single binary, no dependencies
-
-### radius-auth-py (Middleware)
-
-Lightweight Python service implementing **forward auth** and **auth_request** protocols. Works with Caddy, Traefik, Nginx, and any compatible reverse proxy. Easy to customize and extend.
-
-**Location:** [`apps/radius-auth-py/`](apps/radius-auth-py/)
-
-**Features:**
-- Forward auth protocol (Caddy/Traefik)
-- auth_request protocol (Nginx)
-- Session management with secure cookies
-- Built-in login/logout pages
-- Easy to extend with Python
-- FastAPI-based for high performance
 
 ---
 
