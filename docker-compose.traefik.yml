@@ -30,17 +30,17 @@ services:
       - ./apps/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
       - ./apps/traefik/dynamic:/etc/traefik/dynamic:ro
     depends_on:
-      - go-radius-auth
+      - radius-auth-go
       - whoami
     networks:
       - auth-network
 
   # RADIUS authentication backend (Go implementation)
-  go-radius-auth:
+  radius-auth-go:
     build:
-      context: ./apps/go-radius-auth
+      context: ./apps/radius-auth-go
       dockerfile: Dockerfile
-    container_name: traefik-go-radius-auth
+    container_name: traefik-radius-auth-go
     restart: unless-stopped
     environment:
       RADIUS_SERVER: radius

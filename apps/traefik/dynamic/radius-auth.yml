@@ -1,8 +1,8 @@
 http:
   middlewares:
-    go-radius-auth:
+    radius-auth-go:
       forwardAuth:
-        address: "http://go-radius-auth:5000/auth"
+        address: "http://radius-auth-go:5000/auth"
         trustForwardHeader: true
         authResponseHeaders:
           - "X-Auth-User"
@@ -11,7 +11,7 @@ http:
     # Login and logout routes (no auth required)
     auth-routes:
       rule: "PathPrefix(`/login`) || PathPrefix(`/do-login`) || PathPrefix(`/logout`)"
-      service: go-radius-auth
+      service: radius-auth-go
       entryPoints:
         - web
 
@@ -19,16 +19,16 @@ http:
     app:
       rule: "PathPrefix(`/`)"
       middlewares:
-        - go-radius-auth
+        - radius-auth-go
       service: whoami
       entryPoints:
         - web
 
   services:
-    go-radius-auth:
+    radius-auth-go:
       loadBalancer:
         servers:
-          - url: "http://go-radius-auth:5000"
+          - url: "http://radius-auth-go:5000"
 
     whoami:
       loadBalancer:

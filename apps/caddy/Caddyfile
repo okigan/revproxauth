@@ -13,26 +13,26 @@
 
     # Login routes (no auth required)
     handle /login {
-        reverse_proxy go-radius-auth:5000 {
+        reverse_proxy radius-auth-go:5000 {
             header_up X-Original-URL {scheme}://{host}{uri}
         }
     }
 
     handle /do-login {
-        reverse_proxy go-radius-auth:5000 {
+        reverse_proxy radius-auth-go:5000 {
             header_up X-Original-URL {scheme}://{host}{uri}
         }
     }
 
     handle /logout {
-        reverse_proxy go-radius-auth:5000 {
+        reverse_proxy radius-auth-go:5000 {
             header_up X-Original-URL {scheme}://{host}{uri}
         }
     }
 
     # Protected routes - require authentication
     handle {
-        forward_auth go-radius-auth:5000 {
+        forward_auth radius-auth-go:5000 {
             uri /auth
             copy_headers X-Auth-User
         }
