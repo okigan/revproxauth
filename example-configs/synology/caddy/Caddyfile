@@ -1,0 +1,40 @@
+{
+    email your-email@example.com
+}
+
+# Shared auth configuration
+(protected) {
+    forward_auth radius-auth-go:8999 {
+        uri /auth
+        copy_headers X-Auth-User
+    }
+}
+
+# Login/logout routes (no auth)
+(auth-routes) {
+    handle /login* {
+        reverse_proxy radius-auth-go:8999
+    }
+    handle /logout {
+        reverse_proxy radius-auth-go:8999
+    }
+}
+
+# Protected sites
+app1.yourdomain.com {
+    import protected
+    import auth-routes
+    reverse_proxy app1:8080
+}
+
+app2.yourdomain.com {
+    import protected
+    import auth-routes
+    reverse_proxy app2:3000
+}
+
+app3.yourdomain.com {
+    import protected
+    import auth-routes
+    reverse_proxy app3:5000
+}

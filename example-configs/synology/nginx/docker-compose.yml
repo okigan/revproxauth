@@ -1,0 +1,17 @@
+services:
+  radius-auth-py:
+    image: okigan/radius-auth-py:latest
+    environment:
+      RADIUS_SERVER: 172.17.0.1        # Synology host
+      RADIUS_SECRET: your-secret-here  # ⚠️ CHANGE THIS!
+      RADIUS_PORT: 1812
+      SESSION_TIMEOUT: 3600
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "9010:80"      # Use 9010 to avoid conflict with Synology
+      - "9011:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./conf.d:/etc/nginx/conf.d:ro

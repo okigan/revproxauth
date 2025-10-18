@@ -1,0 +1,18 @@
+http:
+  middlewares:
+    radius-auth:
+      forwardAuth:
+        address: "http://radius-auth-go:8999/auth"
+        authResponseHeaders:
+          - "X-Auth-User"
+
+  routers:
+    radius-auth-routes:
+      rule: "PathPrefix(`/login`) || PathPrefix(`/logout`)"
+      service: radius-auth-service
+
+  services:
+    radius-auth-service:
+      loadBalancer:
+        servers:
+          - url: "http://radius-auth-go:8999"

@@ -395,6 +395,14 @@ Deploy Caddy with RADIUS authentication middleware for automatic HTTPS.
 
 **Prerequisites:** Synology RADIUS Server installed and configured (see [RevProxAuth Setup](#-revproxauth-setup-synology))
 
+📥 **Quick Start - Download Configuration:**
+
+```bash
+curl -L https://github.com/okigan/revproxauth/archive/refs/heads/main.tar.gz | tar -xz --strip=2 revproxauth-main/example-configs/synology/caddy
+```
+
+Or browse files at [example-configs/synology/caddy](https://github.com/okigan/revproxauth/tree/main/example-configs/synology/caddy)
+
 ### Docker Compose
 
 ```yaml
@@ -410,8 +418,8 @@ services:
   caddy:
     image: caddy:latest
     ports:
-      - "80:80"
-      - "443:443"
+      - "9030:80"      # Use 9030 to avoid conflict with Synology
+      - "9031:443"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
@@ -471,9 +479,17 @@ app3.yourdomain.com {
 
 ## 🚀 Traefik + radius-auth Setup
 
-Deploy Traefik with RADIUS authentication for dynamic service discovery.
+Deploy Traefik with RADIUS authentication middleware for dynamic service discovery.
 
 **Prerequisites:** Synology RADIUS Server installed and configured (see [RevProxAuth Setup](#-revproxauth-setup-synology))
+
+📥 **Quick Start - Download Configuration:**
+
+```bash
+curl -L https://github.com/okigan/revproxauth/archive/refs/heads/main.tar.gz | tar -xz --strip=2 revproxauth-main/example-configs/synology/traefik
+```
+
+Or browse files at [example-configs/synology/traefik](https://github.com/okigan/revproxauth/tree/main/example-configs/synology/traefik)
 
 ### Docker Compose
 
@@ -490,8 +506,9 @@ services:
   traefik:
     image: traefik:v2.10
     ports:
-      - "80:80"
-      - "443:443"
+      - "9020:80"      # Use 9020 to avoid conflict with Synology
+      - "9021:443"
+      - "9022:8080"    # Traefik dashboard
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik.yml:/etc/traefik/traefik.yml:ro
@@ -558,9 +575,17 @@ labels:
 
 ## 🚀 Nginx + radius-auth Setup
 
-Deploy Nginx with RADIUS authentication for production stability.
+Deploy Nginx with RADIUS authentication middleware for production-grade stability.
 
 **Prerequisites:** Synology RADIUS Server installed and configured (see [RevProxAuth Setup](#-revproxauth-setup-synology))
+
+📥 **Quick Start - Download Configuration:**
+
+```bash
+curl -L https://github.com/okigan/revproxauth/archive/refs/heads/main.tar.gz | tar -xz --strip=2 revproxauth-main/example-configs/synology/nginx
+```
+
+Or browse files at [example-configs/synology/nginx](https://github.com/okigan/revproxauth/tree/main/example-configs/synology/nginx)
 
 ### Docker Compose
 
@@ -577,8 +602,8 @@ services:
   nginx:
     image: nginx:latest
     ports:
-      - "80:80"
-      - "443:443"
+      - "9010:80"      # Use 9010 to avoid conflict with Synology
+      - "9011:443"
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./conf.d:/etc/nginx/conf.d:ro

@@ -1,0 +1,27 @@
+services:
+  radius-auth-go:
+    image: okigan/radius-auth-go:latest
+    environment:
+      RADIUS_SERVER: 172.17.0.1        # Synology host
+      RADIUS_SECRET: your-secret-here  # ⚠️ CHANGE THIS!
+      RADIUS_PORT: 1812
+      SESSION_TIMEOUT: 3600
+
+  traefik:
+    image: traefik:v2.10
+    ports:
+      - "9020:80"      # Use 9020 to avoid conflict with Synology
+      - "9021:443"
+      - "9022:8080"    # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik.yml:/etc/traefik/traefik.yml:ro
+      - ./dynamic:/etc/traefik/dynamic:ro
+
+  # Example: Protected application
+  whoami:
+    image: traefik/whoami:latest
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`app1.yourdomain.com`)"
+      - "traefik.http.routers.whoami.middlewares=radius-auth"
