@@ -232,6 +232,14 @@ All components in this repository are published as multi-architecture Docker ima
 - ✅ Domain name with DNS pointing to your NAS
 - ✅ SSL certificate configured (Synology can auto-provision Let's Encrypt)
 
+📥 **Quick Start - Download Configuration:**
+
+```bash
+curl -L https://github.com/okigan/revproxauth/archive/refs/heads/main.tar.gz | tar -xz --strip=3 revproxauth-main/example-configs/synology/revproxauth
+```
+
+Or browse files at [example-configs/synology/revproxauth](https://github.com/okigan/revproxauth/tree/main/example-configs/synology/revproxauth)
+
 ### Step 1: Install RADIUS Server
 
 1. Open **Package Center** on Synology
