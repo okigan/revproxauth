@@ -45,23 +45,23 @@ This repository explores different approaches to adding RADIUS authentication to
 **Best for:** Synology NAS users who want a complete solution with web UI
 
 ```mermaid
-graph TB
-    Internet["🌐 Internet<br/>HTTPS"]
-    Synology["📦 Synology Reverse Proxy<br/>:443 SSL Termination"]
-    RevProx["🔐 RevProxAuth<br/>:9000<br/>Auth + Routing + UI"]
-    RADIUS["🔑 RADIUS Server<br/>:1812"]
-    Apps["📱 Applications"]
+graph LR
+    A["🌐 Internet"] 
+    B["📦 Synology :443"]
+    C["🔐 RevProxAuth :9000"]
+    D["🔑 RADIUS :1812"]
+    E["📱 Apps"]
     
-    Internet -->|HTTPS| Synology
-    Synology -->|HTTP| RevProx
-    RevProx -.->|Auth| RADIUS
-    RevProx -->|Proxy| Apps
+    A -->|HTTPS| B
+    B -->|HTTP| C
+    C -.->|Auth| D
+    C -->|Proxy| E
     
-    style Internet fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
-    style Synology fill:#fff3e0,stroke:#f57c00,stroke-width:3px
-    style RevProx fill:#c8e6c9,stroke:#388e3c,stroke-width:3px
-    style RADIUS fill:#ffe0b2,stroke:#f57c00,stroke-width:3px
-    style Apps fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    style A fill:#e3f2fd,stroke:#1976d2,stroke-width:4px,color:#000
+    style B fill:#fff3e0,stroke:#f57c00,stroke-width:4px,color:#000
+    style C fill:#c8e6c9,stroke:#388e3c,stroke-width:4px,color:#000
+    style D fill:#ffe0b2,stroke:#f57c00,stroke-width:4px,color:#000
+    style E fill:#f3e5f5,stroke:#7b1fa2,stroke-width:4px,color:#000
 ```
 
 **Features:**
@@ -80,23 +80,23 @@ graph TB
 **Best for:** Users who want automatic HTTPS with Caddy's simplicity
 
 ```mermaid
-graph TB
-    Internet["🌐 Internet<br/>HTTPS"]
-    Caddy["🟦 Caddy<br/>:443<br/>SSL + Routing"]
-    AuthGo["⚡ radius-auth-go<br/>:5000<br/>Go Implementation"]
-    RADIUS["🔑 RADIUS Server<br/>:1812"]
-    Apps["📱 Applications"]
+graph LR
+    A["🌐 Internet"] 
+    B["🟦 Caddy :443"]
+    C["⚡ radius-auth-go :5000"]
+    D["🔑 RADIUS :1812"]
+    E["📱 Apps"]
     
-    Internet -->|HTTPS| Caddy
-    Caddy -.->|Forward Auth| AuthGo
-    AuthGo -.->|RADIUS| RADIUS
-    Caddy -->|Proxy| Apps
+    A -->|HTTPS| B
+    B -.->|Auth| C
+    C -.->|RADIUS| D
+    B -->|Proxy| E
     
-    style Internet fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
-    style Caddy fill:#b3e5fc,stroke:#0288d1,stroke-width:3px
-    style AuthGo fill:#fff9c4,stroke:#f9a825,stroke-width:3px
-    style RADIUS fill:#ffe0b2,stroke:#f57c00,stroke-width:3px
-    style Apps fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    style A fill:#e3f2fd,stroke:#1976d2,stroke-width:4px,color:#000
+    style B fill:#b3e5fc,stroke:#0288d1,stroke-width:4px,color:#000
+    style C fill:#fff9c4,stroke:#f9a825,stroke-width:4px,color:#000
+    style D fill:#ffe0b2,stroke:#f57c00,stroke-width:4px,color:#000
+    style E fill:#f3e5f5,stroke:#7b1fa2,stroke-width:4px,color:#000
 ```
 
 **Features:**
@@ -116,23 +116,23 @@ graph TB
 **Best for:** Dynamic container environments with service discovery
 
 ```mermaid
-graph TB
-    Internet["🌐 Internet<br/>HTTPS"]
-    Traefik["🔷 Traefik<br/>:443<br/>SSL + Discovery"]
-    AuthGo["⚡ radius-auth-go<br/>:5000<br/>Go Implementation"]
-    RADIUS["🔑 RADIUS Server<br/>:1812"]
-    Apps["📱 Applications<br/>Docker Labels"]
+graph LR
+    A["🌐 Internet"] 
+    B["🔷 Traefik :443"]
+    C["⚡ radius-auth-go :5000"]
+    D["🔑 RADIUS :1812"]
+    E["📱 Apps"]
     
-    Internet -->|HTTPS| Traefik
-    Traefik -.->|Forward Auth| AuthGo
-    AuthGo -.->|RADIUS| RADIUS
-    Traefik -->|Proxy| Apps
+    A -->|HTTPS| B
+    B -.->|Auth| C
+    C -.->|RADIUS| D
+    B -->|Proxy| E
     
-    style Internet fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
-    style Traefik fill:#c5cae9,stroke:#5c6bc0,stroke-width:3px
-    style AuthGo fill:#fff9c4,stroke:#f9a825,stroke-width:3px
-    style RADIUS fill:#ffe0b2,stroke:#f57c00,stroke-width:3px
-    style Apps fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    style A fill:#e3f2fd,stroke:#1976d2,stroke-width:4px,color:#000
+    style B fill:#c5cae9,stroke:#5c6bc0,stroke-width:4px,color:#000
+    style C fill:#fff9c4,stroke:#f9a825,stroke-width:4px,color:#000
+    style D fill:#ffe0b2,stroke:#f57c00,stroke-width:4px,color:#000
+    style E fill:#f3e5f5,stroke:#7b1fa2,stroke-width:4px,color:#000
 ```
 
 **Features:**
@@ -152,23 +152,23 @@ graph TB
 **Best for:** Production environments needing proven stability
 
 ```mermaid
-graph TB
-    Internet["🌐 Internet<br/>HTTPS"]
-    Nginx["🟩 Nginx<br/>:443<br/>SSL + Routing"]
-    AuthPy["🐍 radius-auth-py<br/>:5000<br/>Python Implementation"]
-    RADIUS["🔑 RADIUS Server<br/>:1812"]
-    Apps["📱 Applications"]
+graph LR
+    A["🌐 Internet"] 
+    B["🟩 Nginx :443"]
+    C["🐍 radius-auth-py :5000"]
+    D["🔑 RADIUS :1812"]
+    E["📱 Apps"]
     
-    Internet -->|HTTPS| Nginx
-    Nginx -.->|auth_request| AuthPy
-    AuthPy -.->|RADIUS| RADIUS
-    Nginx -->|Proxy| Apps
+    A -->|HTTPS| B
+    B -.->|Auth| C
+    C -.->|RADIUS| D
+    B -->|Proxy| E
     
-    style Internet fill:#e3f2fd,stroke:#1976d2,stroke-width:3px
-    style Nginx fill:#c8e6c9,stroke:#388e3c,stroke-width:3px
-    style AuthPy fill:#fff9c4,stroke:#f9a825,stroke-width:3px
-    style RADIUS fill:#ffe0b2,stroke:#f57c00,stroke-width:3px
-    style Apps fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    style A fill:#e3f2fd,stroke:#1976d2,stroke-width:4px,color:#000
+    style B fill:#c8e6c9,stroke:#388e3c,stroke-width:4px,color:#000
+    style C fill:#fff9c4,stroke:#f9a825,stroke-width:4px,color:#000
+    style D fill:#ffe0b2,stroke:#f57c00,stroke-width:4px,color:#000
+    style E fill:#f3e5f5,stroke:#7b1fa2,stroke-width:4px,color:#000
 ```
 
 **Features:**
