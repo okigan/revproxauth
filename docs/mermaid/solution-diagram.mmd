@@ -1,0 +1,37 @@
+graph LR
+    Internet["🌐 User/Client<br/>(Internet)"]
+    
+    subgraph UniFi["<b>UniFi Infrastructure</b>"]
+        Router["Router/Gateway"]
+        WiFi["WiFi APs<br/>(WPA Enterprise)"]
+    end
+    
+    APClient["💻 AP Client<br/>(WiFi Device)"]
+    
+    subgraph Synology["<b>Synology NAS</b>"]
+        SynRP["Reverse Proxy<br/>HTTPS/Let's Encrypt<br/>Certificate per sub-domain"]
+        RADIUS["RADIUS Server"]
+        RevProx["RevProxAuth<br/>(Docker)"]
+    end
+    
+    Llama["llama-server<br/>(separate server)"]
+    
+    Internet ==>|HTTPS| Router
+    Router ==>|Port Forward| SynRP
+    SynRP -->|HTTP| RevProx
+    
+    APClient ---|WiFi| WiFi
+    WiFi -.->|Auth| RADIUS
+    RevProx -.->|Auth| RADIUS
+    RevProx -->|Proxy| Llama
+    
+    style Internet fill:#ffebee,stroke:#c62828,stroke-width:3px
+    style UniFi fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    style Router fill:#ffe0b2,stroke:#f57c00
+    style WiFi fill:#ffecb3,stroke:#f57c00
+    style APClient fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    style Synology fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    style SynRP fill:#bbdefb,stroke:#1976d2
+    style RADIUS fill:#90caf9,stroke:#1976d2
+    style RevProx fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    style Llama fill:#fce4ec,stroke:#c2185b,stroke-width:2px

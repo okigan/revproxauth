@@ -1,0 +1,181 @@
+name: Publish to Substack
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_mode:
+        description: 'Publish mode'
+        required: true
+        type: choice
+        options:
+          - draft
+          - publish
+        default: draft
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/substack/post.md'
+      - 'docs/images/*.png'
+      - 'docs/mermaid/*.mmd'
+
+jobs:
+  prepare-content:
+    name: Prepare Substack Content
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Regenerate diagrams if needed
+        run: |
+          uv run tools/generate_mermaid_diagrams.py
+
+      - name: Convert markdown to HTML
+        run: |
+          uv run --with markdown --with beautifulsoup4 python - <<'EOF'
+          import markdown
+          from pathlib import Path
+          from bs4 import BeautifulSoup
+          import re
+          
+          # Read the markdown file
+          md_file = Path('docs/substack/post.md')
+          content = md_file.read_text()
+          
+          # Convert markdown to HTML
+          html = markdown.markdown(
+              content,
+              extensions=['fenced_code', 'tables', 'nl2br'],
+              output_format='html5'
+          )
+          
+          # Parse with BeautifulSoup for cleanup
+          soup = BeautifulSoup(html, 'html.parser')
+          
+          # Convert relative image paths to absolute GitHub URLs
+          base_url = 'https://raw.githubusercontent.com/okigan/revproxauth/main/'
+          for img in soup.find_all('img'):
+              src = img.get('src', '')
+              if src.startswith('docs/'):
+                  img['src'] = base_url + src
+          
+          # Output processed HTML
+          output_file = Path('docs/substack/post.html')
+          output_file.write_text(str(soup))
+          
+          print(f"✓ Converted markdown to HTML: {output_file}")
+          print(f"✓ Image paths updated to use GitHub raw URLs")
+          EOF
+
+      - name: Create Substack draft info
+        run: |
+          cat > docs/substack/DRAFT_INFO.md <<'EOF'
+          # Substack Post Draft
+          
+          **Generated:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          **Source:** docs/substack/post.md
+          **HTML Output:** docs/substack/post.html
+          **Commit:** ${{ github.sha }}
+          
+          ## Next Steps
+          
+          ### Manual Publishing (Current)
+          
+          1. Open `docs/substack/post.html` from this repository
+          2. Go to your Substack writer dashboard: https://[your-substack].substack.com/publish
+          3. Click "New post"
+          4. Switch to HTML mode (⌘+⇧+H or Ctrl+Shift+H)
+          5. Paste the content from `post.html`
+          6. Add a cover image if desired
+          7. Review and publish
+          
+          ### Automated Publishing (Future)
+          
+          To enable automated publishing, you'll need:
+          
+          1. **Substack API Access**
+             - Contact Substack support to request API access
+             - Or use third-party tools like Zapier/n8n
+          
+          2. **Add Secrets to GitHub**
+             - `SUBSTACK_API_KEY` - Your Substack API key
+             - `SUBSTACK_PUBLICATION_ID` - Your publication ID
+          
+          3. **Uncomment the publish step** in `.github/workflows/publish-substack.yml`
+          
+          ## Images
+          
+          All images are served from GitHub raw URLs:
+          - `https://raw.githubusercontent.com/okigan/revproxauth/main/docs/images/problem-diagram.png`
+          - `https://raw.githubusercontent.com/okigan/revproxauth/main/docs/images/solution-diagram.png`
+          
+          These URLs will work in Substack posts.
+          EOF
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: substack-content
+          path: |
+            docs/substack/post.html
+            docs/substack/post.md
+            docs/substack/DRAFT_INFO.md
+            docs/images/*.png
+          retention-days: 90
+
+      - name: Create summary
+        run: |
+          echo "## 📝 Substack Content Prepared" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✓ Markdown converted to HTML" >> $GITHUB_STEP_SUMMARY
+          echo "✓ Image URLs updated to use GitHub raw URLs" >> $GITHUB_STEP_SUMMARY
+          echo "✓ Artifacts uploaded for review" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Download the artifacts from this workflow run" >> $GITHUB_STEP_SUMMARY
+          echo "2. Open \`post.html\` and copy the content" >> $GITHUB_STEP_SUMMARY
+          echo "3. Paste into Substack editor (HTML mode)" >> $GITHUB_STEP_SUMMARY
+          echo "4. Review and publish!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Files Generated" >> $GITHUB_STEP_SUMMARY
+          echo "- \`docs/substack/post.html\` - Ready for Substack" >> $GITHUB_STEP_SUMMARY
+          echo "- \`docs/substack/DRAFT_INFO.md\` - Publishing instructions" >> $GITHUB_STEP_SUMMARY
+
+  publish-to-substack:
+    name: Publish to Substack
+    runs-on: ubuntu-latest
+    needs: prepare-content
+    if: github.event.inputs.publish_mode == 'publish'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Publish to Substack
+        env:
+          SUBSTACK_EMAIL: ${{ secrets.SUBSTACK_EMAIL }}
+          SUBSTACK_PASSWORD: ${{ secrets.SUBSTACK_PASSWORD }}
+        run: |
+          uv run tools/publish_to_substack.py

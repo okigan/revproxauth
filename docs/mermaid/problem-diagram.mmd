@@ -1,0 +1,11 @@
+graph LR
+    Internet["🌐 User/Client<br/>(Internet)"]
+    Router["UniFi Router"]
+    Llama["llama-server"]
+    
+    Internet -.-> Router
+    Router --- | Port Forward | Llama
+    
+    style Internet fill:#ffebee,stroke:#c62828,stroke-width:3px
+    style Router fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    style Llama fill:#ffcdd2,stroke:#c62828,stroke-width:3px

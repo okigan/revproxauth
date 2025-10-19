@@ -45,9 +45,10 @@ This repository provides **multiple RADIUS authentication solutions** for revers
 
 This repository provides **RADIUS authentication components** for different reverse proxy architectures. All components are available as Docker images:
 
-- **RevProxAuth** - All-in-one solution with routing, auth, and web UI (one container does it all)
+- **RevProxAuth** - All-in-one solution with routing, auth, and web UI with on the fly updates (one container does it all)
 - **radius-auth-go** - Lightweight auth middleware (Go) supporting forward auth and auth_request protocols
 - **radius-auth-py** - Lightweight auth middleware (Python) supporting forward auth and auth_request protocols
+- **example-configs** - Example docker compose configs for RevProxAuth/Nginx/Caddy/Traefik
 
 Choose the deployment that fits your infrastructure:
 
