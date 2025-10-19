@@ -137,8 +137,17 @@ def parse_markdown_to_substack_format(md_content: str) -> list:
     return content_blocks
 
 
-def publish_to_substack(post_content: list, title: str, subtitle: str = ""):
-    """Publish content to Substack using the python-substack library."""
+def publish_to_substack(
+    post_content: list, title: str, subtitle: str = "", publish_mode: str = "draft"
+):
+    """Publish content to Substack using the python-substack library.
+
+    Args:
+        post_content: List of content blocks in Substack format
+        title: Post title
+        subtitle: Post subtitle
+        publish_mode: Either 'draft' or 'publish'
+    """
 
     # Get credentials from environment
     email = os.getenv("SUBSTACK_EMAIL")
@@ -192,16 +201,15 @@ def publish_to_substack(post_content: list, title: str, subtitle: str = ""):
     api.prepublish_draft(draft_id)
     print("✓ Draft validated")
 
-    print("\n✅ Draft created successfully!")
-    print(f"📝 Review your draft at: https://substack.com/publish/post/{draft_id}")
-    print("\nTo publish, you can:")
-    print("  1. Manually publish from the Substack web interface")
-    print("  2. Or uncomment the api.publish_draft() line in this script")
-
-    # Uncomment to automatically publish:
-    # print("\n🚀 Publishing draft...")
-    # api.publish_draft(draft_id)
-    # print("✅ Post published!")
+    if publish_mode == "publish":
+        print("\n🚀 Publishing draft...")
+        api.publish_draft(draft_id)
+        print("\n✅ Post published successfully!")
+        print(f"📝 View your post at: https://substack.com/publish/post/{draft_id}")
+    else:
+        print("\n✅ Draft created successfully!")
+        print(f"📝 Review your draft at: https://substack.com/publish/post/{draft_id}")
+        print("\nTo publish, run the workflow with publish_mode='publish'")
 
 
 def main():
@@ -219,11 +227,16 @@ def main():
     content_blocks = parse_markdown_to_substack_format(md_content)
     print(f"✓ Converted {len(content_blocks)} content blocks")
 
+    # Get publish mode from environment (default to draft)
+    publish_mode = os.getenv("PUBLISH_MODE", "draft")
+    print(f"📤 Mode: {publish_mode.upper()}")
+    print()
+
     # Publish
     title = "How a 1991 Protocol Guards My Privately Hosted LLM"
     subtitle = "I built a reverse proxy that reuses my existing RADIUS auth to guard self-hosted LLM and other web services"
 
-    publish_to_substack(content_blocks, title, subtitle)
+    publish_to_substack(content_blocks, title, subtitle, publish_mode)
 
     print("\n✨ Done!")
 
