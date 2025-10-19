@@ -38,6 +38,10 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install Playwright browsers
+        run: |
+          uv run --with playwright playwright install --with-deps chromium
+
       - name: Regenerate diagrams if needed
         run: |
           uv run tools/generate_mermaid_diagrams.py
@@ -176,6 +180,6 @@ jobs:
       - name: Publish to Substack
         env:
           SUBSTACK_EMAIL: ${{ secrets.SUBSTACK_EMAIL }}
-          SUBSTACK_PASSWORD: ${{ secrets.SUBSTACK_PASSWORD }}
+          git: ${{ secrets.SUBSTACK_PASSWORD }}
         run: |
           uv run tools/publish_to_substack.py
