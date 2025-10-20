@@ -40,6 +40,8 @@ def convert_to_substack():
 
     # Pre-process: Convert relative image paths in HTML tags before markdown conversion
     content = content.replace('src="../images/', 'src="docs/images/')
+    # Also handle markdown image syntax
+    content = content.replace("](../images/", "](docs/images/")
 
     # Convert to HTML
     print("🔄 Converting Markdown to HTML...")
@@ -67,9 +69,10 @@ def convert_to_substack():
             image_count += 1
             print(f"  ✓ Updated image: {src} → {img['src']}")
 
-    # Remove any style attributes - let Substack handle styling
+    # Remove style attributes except for images - let Substack handle most styling
+    # but preserve image sizing styles
     for tag in soup.find_all(True):
-        if tag.has_attr("style"):
+        if tag.has_attr("style") and tag.name != "img":
             del tag["style"]
 
     # Simplify code blocks - remove inline styles that confuse Substack

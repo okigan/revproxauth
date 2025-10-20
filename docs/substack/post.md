@@ -6,7 +6,7 @@ _I built a reverse proxy that reuses my existing RADIUS auth to guard self-hoste
 
 ## The Setup
 
-My home office contains a mix of servers running different services, and I wanted to access my llama-server (part of llama.cpp) instance while traveling:
+My home office contains a mix of servers running different services, and I wanted to access my llama-server (part of llama.cpp) instance while traveling, the current setup:
 
 - **UniFi UDM**: Router/gateway with integrated WiFi access points
 - **Synology NAS**: Central server running RADIUS, file storage, calendar, contacts, and Docker containers
@@ -20,7 +20,7 @@ And that's how this started—a simple desire to access my home AI without passw
 
 ### Technologies Used
 
-<img src="../images/vendor/logos/synology.png" alt="Synology" height="60"/> <img src="../images/vendor/logos/unifi.png" alt="UniFi" height="60"/> <img src="../images/vendor/logos/llama.png" alt="Llama" height="60"/> <img src="../images/vendor/logos/python.png" alt="Python" height="60"/> <img src="../images/vendor/logos/docker.png" alt="Docker" height="60"/>
+![Tech Stack](../images/tech-stack.png)
 
 ## The Problem
 
@@ -28,13 +28,13 @@ I needed remote access to my llama-server instance. UniFi UDM only does port for
 
 Synology already managed all my user accounts for file sharing and application access, and RADIUS Server allows leveraging that for WiFi authentication. This made it really tempting to find a solution that could also leverage RADIUS for web service authentication.
 
-![The Problem: Insecure Port Forwarding](docs/images/problem-diagram.png)
+<img src="docs/images/problem-diagram.png" alt="The Problem: Insecure Port Forwarding" width="600"/>
 
 ## Why RADIUS?
 
 Frankly, because it's already available within my ecosystem and allows using the same set of users and groups I use day to day. 
 
-RADIUS (Remote Authentication Dial-In User Service) was designed in 1991 for dial-up authentication. Despite its age, it's surprisingly well-suited for this use case:
+RADIUS ([Remote Authentication Dial-In User Service](https://en.wikipedia.org/wiki/RADIUS)) was designed in 1991 for dial-up authentication. Despite its age, it's surprisingly well-suited for this use case:
 1. **Already deployed** for UniFi WPA Enterprise WiFi
 2. **Battle-tested** with decades of production use
 3. **Centralized** authentication for all services
@@ -95,7 +95,7 @@ What started as one tool evolved into four different solutions for different use
 
 ### Detailed Network Diagram
 
-![Complete Architecture with RADIUS Authentication](docs/images/solution-diagram.png)
+<img src="docs/images/solution-diagram.png" alt="Complete Architecture with RADIUS Authentication" width="600"/>
 
 RevProxAuth is the all-in-one option: 
 - Compact Python/FastAPI application—easy to follow, easy to modify

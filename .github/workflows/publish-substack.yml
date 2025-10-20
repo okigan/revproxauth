@@ -1,16 +1,7 @@
-name: Publish to Substack
+name: Prepare Substack Content
 
 on:
   workflow_dispatch:
-    inputs:
-      publish_mode:
-        description: 'Publish mode'
-        required: true
-        type: choice
-        options:
-          - draft
-          - publish
-        default: draft
   push:
     branches:
       - main
@@ -168,35 +159,3 @@ jobs:
           echo "- \`docs/substack/post.md\` - Original markdown" >> $GITHUB_STEP_SUMMARY
           echo "- \`docs/images/*.png\` - Diagram images (already in HTML)" >> $GITHUB_STEP_SUMMARY
           echo "- \`docs/substack/DRAFT_INFO.md\` - Additional info" >> $GITHUB_STEP_SUMMARY
-
-  publish-to-substack:
-    name: Publish to Substack
-    runs-on: ubuntu-latest
-    needs: prepare-content
-    if: github.event.inputs.publish_mode != ''
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-        with:
-          enable-cache: true
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Download prepared content
-        uses: actions/download-artifact@v4
-        with:
-          name: substack-content
-          path: .
-      
-      - name: Display publishing instructions
-        env:
-          PUBLISH_MODE: ${{ github.event.inputs.publish_mode }}
-        run: |
-          uv run tools/publish_to_substack.py

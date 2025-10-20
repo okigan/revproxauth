@@ -144,7 +144,10 @@ substack-prepare:
 	@echo "🎨 Generating Mermaid diagrams..."
 	@uv run tools/generate_mermaid_diagrams.py
 	@echo ""
-	@echo "📝 Converting markdown to HTML..."
+	@echo "�️  Generating logo composite..."
+	@uv run tools/generate_logo_composite.py
+	@echo ""
+	@echo "�📝 Converting markdown to HTML..."
 	@uv run --with markdown --with beautifulsoup4 python tools/convert_to_substack.py
 	@echo ""
 	@echo "========================================================================"
