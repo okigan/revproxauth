@@ -38,6 +38,9 @@ def convert_to_substack():
     print(f"📖 Reading: {md_file}")
     content = md_file.read_text()
 
+    # Pre-process: Convert relative image paths in HTML tags before markdown conversion
+    content = content.replace('src="../images/', 'src="docs/images/')
+
     # Convert to HTML
     print("🔄 Converting Markdown to HTML...")
     html = markdown.markdown(
@@ -57,20 +60,20 @@ def convert_to_substack():
             img["src"] = base_url + src
             image_count += 1
             print(f"  ✓ Updated image: {src} → {img['src']}")
+        elif src.startswith("../images/"):
+            # Handle relative paths from docs/substack/
+            clean_path = "docs/" + src.replace("../images/", "images/")
+            img["src"] = base_url + clean_path
+            image_count += 1
+            print(f"  ✓ Updated image: {src} → {img['src']}")
 
-    # Add some basic styling for code blocks
-    for code in soup.find_all("code"):
-        if not code.parent or code.parent.name != "pre":
-            # Inline code - add subtle background
-            code["style"] = (
-                "background-color: #f4f4f4; padding: 2px 4px; border-radius: 3px; font-family: monospace;"
-            )
+    # Remove any style attributes - let Substack handle styling
+    for tag in soup.find_all(True):
+        if tag.has_attr("style"):
+            del tag["style"]
 
-    for pre in soup.find_all("pre"):
-        # Block code - add styling
-        pre["style"] = (
-            "background-color: #f6f8fa; padding: 16px; border-radius: 6px; overflow-x: auto; font-family: monospace;"
-        )
+    # Simplify code blocks - remove inline styles that confuse Substack
+    # Substack will apply its own styling to <code> and <pre> tags
 
     # Save HTML
     output_file.write_text(str(soup), encoding="utf-8")
@@ -79,10 +82,15 @@ def convert_to_substack():
     print(f"📝 Output: {output_file}")
     print(f"🖼️  Updated {image_count} image URL(s)")
     print("\n📋 Next steps:")
-    print(f"   1. Open {output_file}")
-    print("   2. Copy the HTML content")
-    print("   3. Paste into Substack editor (HTML mode: Cmd+Shift+H)")
-    print("   4. Review and publish!")
+    print(f"   1. Open {output_file} in a web browser")
+    print("   2. Select all (Cmd+A) and copy (Cmd+C)")
+    print("   3. Go to Substack and create a new post")
+    print("   4. Add the title manually")
+    print("   5. Paste into the post body - Substack will format it!")
+    print("   6. Review and publish!")
+    print(
+        "\nNote: The HTML is now clean without inline styles for better Substack compatibility"
+    )
 
     return 0
 

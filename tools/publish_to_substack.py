@@ -17,10 +17,15 @@ from pathlib import Path
 def main():
     """Main entry point - display manual publishing instructions."""
     project_root = Path(__file__).parent.parent
+
+    # Try repository path first, then artifact download path
     html_file = project_root / "docs" / "substack" / "post.html"
+    if not html_file.exists():
+        # Check if running in GitHub Actions with downloaded artifacts
+        html_file = Path("docs/substack/post.html")
 
     if not html_file.exists():
-        print(f"❌ Post HTML not found: {html_file}")
+        print(f"❌ Post HTML not found at: {html_file.absolute()}")
         print("Make sure the prepare-content job has run first!")
         sys.exit(1)
 

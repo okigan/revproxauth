@@ -18,6 +18,10 @@ My home office contains a mix of servers running different services, and I wante
 
 And that's how this started—a simple desire to access my home AI without password proliferation.
 
+### Technologies Used
+
+<img src="../images/vendor/logos/synology.png" alt="Synology" height="60"/> <img src="../images/vendor/logos/unifi.png" alt="UniFi" height="60"/> <img src="../images/vendor/logos/llama.png" alt="Llama" height="60"/> <img src="../images/vendor/logos/python.png" alt="Python" height="60"/> <img src="../images/vendor/logos/docker.png" alt="Docker" height="60"/>
+
 ## The Problem
 
 I needed remote access to my llama-server instance. UniFi UDM only does port forwarding—not secure at all. Synology's reverse proxy terminates HTTPS but doesn't provide authentication. 

@@ -1,6 +1,6 @@
 # Makefile for RevProxAuth - Multi-stack authentication proxy
 
-.PHONY: all help up-revproxauth up-nginx up-traefik up-caddy up-all down-all clean-all logs serve-guide lint format lint-check install-hooks
+.PHONY: all help up-revproxauth up-nginx up-traefik up-caddy up-all down-all clean-all logs serve-guide lint format lint-check install-hooks substack-prepare substack-copy
 
 # Default target
 all: help
@@ -34,6 +34,9 @@ help:
 	@echo "Documentation:"
 	@echo "  make serve-guide        - Serve setup guide locally"
 	@echo "  make build-guide        - Build HTML setup guide"
+	@echo ""
+	@echo "Substack Publishing:"
+	@echo "  make substack-prepare   - Generate Substack-ready HTML (diagrams + conversion)"
 	@echo ""
 	@echo "Access URLs:"
 	@echo "  RevProxAuth:   http://localhost:9000 (RADIUS: 9001)"
@@ -135,6 +138,30 @@ serve-guide:
 build-guide:
 	@echo "🔧 Building setup-guide from markdown..."
 	uv run tools/build_guide.py
+
+# Prepare Substack content (diagrams + HTML conversion)
+substack-prepare:
+	@echo "🎨 Generating Mermaid diagrams..."
+	@uv run tools/generate_mermaid_diagrams.py
+	@echo ""
+	@echo "📝 Converting markdown to HTML..."
+	@uv run --with markdown --with beautifulsoup4 python tools/convert_to_substack.py
+	@echo ""
+	@echo "========================================================================"
+	@echo "📋 READY TO PUBLISH TO SUBSTACK"
+	@echo "========================================================================"
+	@echo ""
+	@echo "1. Open docs/substack/post.html in your browser (Chrome/Safari/Firefox)"
+	@echo "2. Select all content (Cmd+A)"
+	@echo "3. Copy (Cmd+C)"
+	@echo "4. Go to: https://substack.com/publish"
+	@echo "5. Click 'New post'"
+	@echo "6. Type the title: 'How a 1991 Protocol Guards My Privately Hosted LLM'"
+	@echo "7. Click in the post body and paste (Cmd+V)"
+	@echo "8. Review - images should load automatically!"
+	@echo "9. Publish or save as draft"
+	@echo ""
+	@echo "========================================================================"
 
 # Run ruff linter and formatter
 lint:
