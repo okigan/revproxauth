@@ -141,21 +141,33 @@ jobs:
 
       - name: Create summary
         run: |
-          echo "## 📝 Substack Content Prepared" >> $GITHUB_STEP_SUMMARY
+          echo "## 📝 Substack Content Ready" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "✓ Markdown converted to HTML" >> $GITHUB_STEP_SUMMARY
           echo "✓ Image URLs updated to use GitHub raw URLs" >> $GITHUB_STEP_SUMMARY
           echo "✓ Artifacts uploaded for review" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
-          echo "1. Download the artifacts from this workflow run" >> $GITHUB_STEP_SUMMARY
-          echo "2. Open \`post.html\` and copy the content" >> $GITHUB_STEP_SUMMARY
-          echo "3. Paste into Substack editor (HTML mode)" >> $GITHUB_STEP_SUMMARY
-          echo "4. Review and publish!" >> $GITHUB_STEP_SUMMARY
+          echo "### 📋 How to Publish to Substack" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Files Generated" >> $GITHUB_STEP_SUMMARY
-          echo "- \`docs/substack/post.html\` - Ready for Substack" >> $GITHUB_STEP_SUMMARY
-          echo "- \`docs/substack/DRAFT_INFO.md\` - Publishing instructions" >> $GITHUB_STEP_SUMMARY
+          echo "Substack blocks automated publishing, so follow these steps:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "1. **Download** the artifacts from this workflow run" >> $GITHUB_STEP_SUMMARY
+          echo "2. **Open** \`post.html\` in a text editor" >> $GITHUB_STEP_SUMMARY
+          echo "3. **Copy** all the HTML content (Cmd+A, Cmd+C)" >> $GITHUB_STEP_SUMMARY
+          echo "4. **Go to** [Substack Publisher](https://substack.com/publish)" >> $GITHUB_STEP_SUMMARY
+          echo "5. **Click** 'New post'" >> $GITHUB_STEP_SUMMARY
+          echo "6. **Add** title and subtitle" >> $GITHUB_STEP_SUMMARY
+          echo "7. **Switch** to HTML mode (Cmd+Shift+H or Ctrl+Shift+H)" >> $GITHUB_STEP_SUMMARY
+          echo "8. **Paste** the HTML content" >> $GITHUB_STEP_SUMMARY
+          echo "9. **Review** the formatted post" >> $GITHUB_STEP_SUMMARY
+          echo "10. **Save as draft** or **Publish**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Files in Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- \`docs/substack/post.html\` - **Copy this to Substack**" >> $GITHUB_STEP_SUMMARY
+          echo "- \`docs/substack/post.md\` - Original markdown" >> $GITHUB_STEP_SUMMARY
+          echo "- \`docs/images/*.png\` - Diagram images (already in HTML)" >> $GITHUB_STEP_SUMMARY
+          echo "- \`docs/substack/DRAFT_INFO.md\` - Additional info" >> $GITHUB_STEP_SUMMARY
 
   publish-to-substack:
     name: Publish to Substack
@@ -183,10 +195,8 @@ jobs:
           name: substack-content
           path: .
       
-      - name: Publish to Substack
+      - name: Display publishing instructions
         env:
-          SUBSTACK_EMAIL: ${{ secrets.SUBSTACK_EMAIL }}
-          SUBSTACK_PASSWORD: ${{ secrets.SUBSTACK_PASSWORD }}
           PUBLISH_MODE: ${{ github.event.inputs.publish_mode }}
         run: |
           uv run tools/publish_to_substack.py
