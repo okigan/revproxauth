@@ -37,7 +37,7 @@ This repository provides **multiple RADIUS authentication solutions** for revers
 
 ---
 
-![RevProxAuth Management UI](docs/images/image.png)
+![RevProxAuth Management UI](docs/images/revproxauth-admin-ui.png)
 
 ---
 

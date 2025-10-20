@@ -8,7 +8,7 @@ Step-by-step walkthrough for Synology Container Manager
 
 First, install the RADIUS Server package from Synology Package Center. This provides authentication services for RevProxAuth.
 
-![RADIUS Server Installation](images/image.png)
+![RADIUS Server Installation](images/revproxauth-admin-ui.png)
 
 1. Open **Package Center** on your Synology NAS
 2. Search for "RADIUS Server"

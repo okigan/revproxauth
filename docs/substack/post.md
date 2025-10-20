@@ -84,7 +84,7 @@ I wanted dynamic, live configuration that wouldn't require manually editing JSON
 
 ## The Solution (and Two Bonus Tools)
 
-What started as one tool evolved into four different solutions for different use cases.
+What started as one tool evolved into several solutions: an all-in-one and plugins for popular existing proxy servers.
 
 ### 1. **RevProxAuth** - The All-in-One Solution
 
@@ -103,6 +103,9 @@ RevProxAuth is the all-in-one option:
 - Web UI for managing service mappings and basic metrics dashboard
 - Path prefix stripping capability
 - Special handling for LLM token streaming for improved responsiveness
+
+
+<img src="docs/images/revproxauth-admin-ui.png" alt="revproxauth-admin-ui", width="600" />
 
 ### 2. **radius-auth-py** - Python Alternative
 
